@@ -92,8 +92,6 @@ public class HelloApplication extends Application {
         );
 
         loadProperties();
-        root.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton, logArea, progressBar);
-
         //シーンのサイズを調整
         Scene scene = new Scene(root, 500, 350);
         primaryStage.setScene(scene);
@@ -123,9 +121,11 @@ public class HelloApplication extends Application {
         Task<Void> downloadTask = new Task<>() {
             @Override
             protected Void call() throws Exception {
-                HttpClient client = HttpClient.newHttpClient();
-                HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
-                HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                HttpResponse<InputStream> response;
+                try (HttpClient client = HttpClient.newHttpClient()) {
+                    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
+                    response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                }
 
                 if (response.statusCode() == 200) {
                     long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
@@ -158,7 +158,18 @@ public class HelloApplication extends Application {
             logArea.appendText("ダウンロードが完了しました: upgrade.zip\n");
             progressBar.progressProperty().unbind();
             progressBar.setProgress(1); // 100%にする
-            // ★★★ ここに次のステップである「Zip解凍とファイル操作」の処理を呼び出す ★★★
+            // 「Zip解凍とファイル操作」の処理を呼び出す
+            logArea.appendText("アップデートファイルを解凍しています...\n");
+            try {
+                // アップデートファイルを一時フォルダ(temp_upgrade)に解凍する
+                unzip("upgrade.zip", "temp_upgrade");
+                logArea.appendText("解凍が完了しました。\n");
+
+                // ★★★ ここに次のステップである「設定ファイルの読み込み」と「ファイル操作」を実装します ★★★
+
+            } catch (IOException e) {
+                logArea.appendText("エラー: ファイルの解凍に失敗しました - " + e.getMessage() + "\n");
+            }
         });
 
         // Taskが失敗した時の処理
