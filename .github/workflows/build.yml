@@ -37,25 +37,42 @@ jobs:
         run: mvn -B package --file pom.xml
 
       # 4. jpackageで各OS向けのインストーラーを作成する
-      - name: Package with jpackage
+      - name: Package with jpackage (with debug)
         shell: bash
         run: |
-          # ★★★ 修正箇所: pom.xmlに合わせてJARファイル名を直接指定する ★★★
+          echo "--- Step 4: Starting Package with jpackage ---"
+          echo "--- Debug: Listing files in the current directory ---"
+          ls -R
+
+          # ★★★ pom.xmlに合わせてJARファイル名を直接指定 ★★★
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
           
+          echo "--- JAR_NAME is set to: ${JAR_NAME} ---"
+          echo "--- Checking if the JAR file exists in target/ ---"
+          if [ ! -f "target/${JAR_NAME}" ]; then
+            echo "Error: Main JAR file not found at target/${JAR_NAME}"
+            exit 1
+          fi
+
           # OSごとにjpackageのコマンドと出力ファイル名を変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            echo "--- Running jpackage for Windows ---"
             jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --win-menu --win-shortcut
             ARTIFACT_PATH="Modpack Updater.exe"
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            echo "--- Running jpackage for macOS ---"
             jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --icon src/main/resources/icon.icns
             ARTIFACT_PATH="Modpack Updater.dmg"
           else # ubuntu-latest
+            echo "--- Running jpackage for Linux ---"
             jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --linux-shortcut
             ARTIFACT_PATH="Modpack Updater.deb"
           fi
           
-          # 作成されたファイルの名前を環境変数にセット
+          echo "--- jpackage command finished ---"
+          echo "--- Debug: Listing files again to see if artifact was created ---"
+          ls -R
+          
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}" >> $GITHUB_ENV
 
       # 5. 完成したインストーラーをリリースにアップロードする
