@@ -39,8 +39,9 @@ jobs:
       # 4. jpackageで各OS向けのインストーラーを作成する
       - name: Package with jpackage
         run: |
-          # JARファイルの名前をpom.xmlから自動で取得 (例: gt-updated-1.0.jar)
-          JAR_NAME=$(mvn help:evaluate -Dexpression=project.build.finalName -q -DforceStdout).jar
+          # ★★★ 修正箇所: JARファイル名を直接指定する ★★★
+          # pom.xmlの<artifactId>-<version>.jarに合わせる
+          JAR_NAME="gt-updated-1.0.3.jar"
           
           # OSごとにjpackageのコマンドと出力ファイル名を変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
