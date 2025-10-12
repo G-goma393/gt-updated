@@ -40,8 +40,7 @@ jobs:
       - name: Package with jpackage
         shell: bash
         run: |
-          # ★★★ 修正箇所: JARファイル名を直接指定する ★★★
-          # pom.xmlの<artifactId>-<version>.jarに合わせる
+          # ★★★ 修正箇所: pom.xmlに合わせてJARファイル名を直接指定する ★★★
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
           
           # OSごとにjpackageのコマンドと出力ファイル名を変更
