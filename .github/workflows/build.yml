@@ -56,9 +56,9 @@ jobs:
 
           # OSごとにjpackageのコマンドと出力ファイル名を変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            echo "--- Running jpackage for Windows ---"
             jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --win-menu --win-shortcut
-            ARTIFACT_PATH="Modpack Updater.exe"
+            # ★ 修正箇所: jpackageが実際に生成するファイル名に合わせる
+            ARTIFACT_PATH="Modpack Updater-1.0.exe"
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
             jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --icon src/main/resources/icon.icns
             # ★ 修正箇所: jpackageが実際に生成するファイル名に合わせる
