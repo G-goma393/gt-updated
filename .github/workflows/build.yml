@@ -40,7 +40,7 @@ jobs:
         run: |
           # JARファイルの名前をpom.xmlから自動で取得 (例: gt-updated-1.0.jar)
           JAR_NAME=$(mvn help:evaluate -Dexpression=project.build.finalName -q -DforceStdout).jar
-
+          
           # OSごとにjpackageのコマンドと出力ファイル名を変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
             jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --win-menu --win-shortcut
@@ -52,7 +52,7 @@ jobs:
             jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --linux-shortcut
             ARTIFACT_PATH="Modpack Updater.deb"
           fi
-
+          
           # 作成されたファイルの名前を環境変数にセット
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}" >> $GITHUB_ENV
 
@@ -64,5 +64,5 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./${{ env.ARTIFACT_PATH }}
-          asset_name: ${{ env.ARTIFACT_PATH }} # ★ 修正点: ファイル名に生成されたインストーラー名をそのまま使う
-          asset_content_type: application/octet-stream # ★ 修正点: Zipではなく汎用的なバイナリ形式を指定
+          asset_name: ${{ env.ARTIFACT_PATH }}
+          asset_content_type: application/octet-stream
