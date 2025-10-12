@@ -60,9 +60,9 @@ jobs:
             jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --win-menu --win-shortcut
             ARTIFACT_PATH="Modpack Updater.exe"
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            echo "--- Running jpackage for macOS ---"
             jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --icon src/main/resources/icon.icns
-            ARTIFACT_PATH="Modpack Updater.dmg"
+            # ★ 修正箇所: jpackageが実際に生成するファイル名に合わせる
+            ARTIFACT_PATH="Modpack Updater-1.0.dmg"
           else # ubuntu-latest
             echo "--- Running jpackage for Linux ---"
             jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --linux-shortcut
