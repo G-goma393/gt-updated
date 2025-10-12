@@ -10,6 +10,9 @@ on:
 jobs:
   build:
     # 3種類のOSで並行してジョブを実行するための設定 (マトリックスビルド)
+    permissions:
+      contents: write
+      
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
