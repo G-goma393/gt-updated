@@ -43,21 +43,10 @@ jobs:
       - name: Package with jpackage
         shell: bash
         run: |
-          echo "--- Step 4: Starting Package with jpackage ---"
-          ls -R # 実行前のファイル一覧
-
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
           
-          # ★★★ ここからが修正箇所 ★★★
-          # OSごとにモジュールパスの場所を定義
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            MODULE_PATH="%USERPROFILE%/.m2/repository"
-          else # ubuntu-latest, macos-latest
-            MODULE_PATH="~/.m2/repository"
-          fi
-          
-          echo "--- Using Module Path: ${MODULE_PATH} ---"
-          # ★★★ 修正ここまで ★★★
+          # ★★★ 修正箇所: module-pathを新しい部品棚に変更 ★★★
+          MODULE_PATH="target/modules"
 
           # OSごとにjpackageのコマンドを変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
@@ -76,9 +65,6 @@ jobs:
               --add-modules javafx.controls,com.google.gson,java.net.http
             ARTIFACT_PATH="modpack-updater_1.0_amd64.deb"
           fi
-          
-          echo "--- jpackage command finished ---"
-          ls -R # 実行後のファイル一覧
           
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}" >> $GITHUB_ENV
 
