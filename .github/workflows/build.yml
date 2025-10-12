@@ -38,6 +38,7 @@ jobs:
 
       # 4. jpackageで各OS向けのインストーラーを作成する
       - name: Package with jpackage
+        shell: bash
         run: |
           # ★★★ 修正箇所: JARファイル名を直接指定する ★★★
           # pom.xmlの<artifactId>-<version>.jarに合わせる
