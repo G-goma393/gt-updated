@@ -33,6 +33,7 @@ jobs:
 
       # 3. Mavenでプロジェクトをビルドし、実行可能なJARファイルを作成する
       - name: Build with Maven
+        timeout-minutes: 10
         run: mvn -B package --file pom.xml
 
       # 4. jpackageで各OS向けのインストーラーを作成する
