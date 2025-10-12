@@ -36,7 +36,6 @@ public class HelloApplication extends Application {
 
     // --- 設定値 ---
     private static final String APP_VERSION = "1.0.3"; // このアプリ自身のバージョン
-    // ★ あなたのVPSやS3上のversion.jsonのURLに書き換えてください
     private static final String VERSION_URL = "http://YOUR_SERVER/version.json";
     private static boolean DEBUG_MODE = false;
     private static String DEBUG_LOCAL_ZIP_PATH = "upgrade.zip";

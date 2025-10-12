@@ -1,16 +1,16 @@
 # GT updated
 ## 📝description
-これはMinecraft modサーバーのクライアントサイドの自動更新ツールです。このツールはconfig.iniに従ってゲームディレクトリ内のファイル操作を実行します。config.iniの設定方法についてはあまり期待せずドキュメントが作成されるのを気長に待ってください。
+これはMinecraft modサーバーのクライアントサイドの自動更新ツールです。このツールはmanifest.jsonに従ってゲームディレクトリ内のファイル操作を実行します。manifest.jsonの設定方法についてはあまり期待せずドキュメントが作成されるのを気長に待ってください。
 
-This is a client-side automatic update tool for Minecraft mod servers. This tool performs file operations in the game directory according to config.ini. Don't expect too much about how to set config.ini, but please be patient and wait for documentation to be created.
+This is a client-side automatic update tool for Minecraft mod servers. This tool performs file operations in the game directory according to manifest.json. Don't expect too much about how to set manifest.json, but please be patient and wait for documentation to be created.
 ## 💻platform
 - Windows 10/11
-- Linux
+- Linux (debian/arch)
 - mac
 ## 🤔How to Use?
 複雑な設定は必要ありません。  
 1.ゲームディレクトリを選択してください（次からは必要ありません）  
-2.配布されたアップデートパックをドラックまたは選択してください
+2.アップデートを確認ボタンをクリックしてください
 
 No complicated settings are required.
 1. Select the game directory (this will not be necessary next time)
