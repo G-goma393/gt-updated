@@ -64,9 +64,9 @@ jobs:
             # ★ 修正箇所: jpackageが実際に生成するファイル名に合わせる
             ARTIFACT_PATH="Modpack Updater-1.0.dmg"
           else # ubuntu-latest
-            echo "--- Running jpackage for Linux ---"
             jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --linux-shortcut
-            ARTIFACT_PATH="Modpack Updater.deb"
+            # ★ 修正箇所: jpackageが実際に生成するファイル名に合わせる
+            ARTIFACT_PATH="modpack-updater_1.0_amd64.deb"
           fi
           
           echo "--- jpackage command finished ---"
