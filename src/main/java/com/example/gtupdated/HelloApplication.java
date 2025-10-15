@@ -8,6 +8,7 @@ import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
@@ -48,6 +49,11 @@ public class HelloApplication extends Application {
     private TextField pathInput;
     private TextArea logArea;
     private ProgressBar progressBar;
+    private VBox contentPane;
+    private Button localTestButton;
+    private HBox debugPathBox;
+    private TextField debugPathInput;
+
 
     private final Properties properties = new Properties();
     private final File configFile = new File("config.properties");
@@ -74,32 +80,31 @@ public class HelloApplication extends Application {
         this.primaryStage = primaryStage;
         primaryStage.setTitle("Modpack Updater (v" + APP_VERSION + ")");
 
-        // ★★★ ルートレイアウトをVBoxからBorderPaneに変更 ★★★
+        // --- ルートレイアウト ---
         BorderPane root = new BorderPane();
 
-        // --- メニューバーの作成 ---
+        // --- メニューバー ---
         MenuBar menuBar = new MenuBar();
         Menu viewMenu = new Menu("表示(V)");
         CheckMenuItem debugMenuItem = new CheckMenuItem("デバッグモード");
 
         debugMenuItem.setOnAction(event -> {
             DEBUG_MODE = debugMenuItem.isSelected();
-            // ここにデバッグ用UIの表示/非表示を切り替える処理を後で追加
             logArea.appendText("デバッグモードが " + (DEBUG_MODE ? "有効" : "無効") + " になりました。\n");
+            saveProperties(properties.getProperty("game_directory", ""));
+            updateDebugUI();
         });
         viewMenu.getItems().add(debugMenuItem);
         menuBar.getMenus().add(viewMenu);
-
-        // ★ Macの場合、OSのメニューバーに統合する設定 (Windows/Linuxでは何もしない)
         menuBar.setUseSystemMenuBar(true);
-
-        // ★★★ BorderPaneの上部にメニューバーを配置 ★★★
         root.setTop(menuBar);
 
-        // --- メインコンテンツの作成 (左ペイン) ---
-        VBox leftPane = new VBox(10);
-        leftPane.setPadding(new Insets(15));
+        // --- メインコンテンツ ---
+        // ★ 修正点: contentPaneの重複宣言を削除し、メンバー変数を正しく初期化
+        contentPane = new VBox(10);
+        contentPane.setPadding(new Insets(15));
 
+        // UI要素の作成
         Label infoLabel = new Label("1. ディレクトリを設定し、2. アップデートを確認してください。");
         pathLabel = new Label("ゲームディレクトリ: (未設定)");
         pathInput = new TextField();
@@ -112,34 +117,105 @@ public class HelloApplication extends Application {
         HBox pathInputBox = new HBox(5, pathInput, selectDirButton, setPathButton);
         Button updateButton = new Button("アップデートを確認");
         progressBar = new ProgressBar(0);
-        progressBar.prefWidthProperty().bind(leftPane.widthProperty()); // 幅を親のVBoxに合わせる
+        progressBar.prefWidthProperty().bind(contentPane.widthProperty());
         progressBar.setVisible(false);
 
+        // ★ 修正点: デバッグボタンの重複宣言を削除し、メンバー変数を正しく初期化
+        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
+        localTestButton.setOnAction(event -> {
+            logArea.appendText("ローカルテストを開始します...\n");
+            logArea.appendText("ローカルの '" + DEBUG_LOCAL_ZIP_PATH + "' を解凍しています...\n");
+            try {
+                unzip(DEBUG_LOCAL_ZIP_PATH, "temp_upgrade");
+                logArea.appendText("解凍が完了しました。\n");
+                processManifest("temp_upgrade/manifest.json");
+            } catch (IOException e) {
+                logArea.appendText("エラー: ローカルテスト中に失敗しました - " + e.getMessage() + "\n");
+            }
+        });
+        Label debugPathLabel = new Label("テスト用Zipパス (デバッグモード):");
+        debugPathInput = new TextField();
+        Button selectDebugZipButton = new Button("参照...");
+        selectDebugZipButton.setOnAction(event -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("テスト用のupgrade.zipを選択");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("ZIP Archives", "*.zip"));
+            File selectedFile = chooser.showOpenDialog(this.primaryStage);
+            if (selectedFile != null) {
+                // 選択したファイルの絶対パスを入力欄に設定
+                debugPathInput.setText(selectedFile.getAbsolutePath());
+                // 同時に設定ファイルにも保存する
+                saveProperties(properties.getProperty("game_directory", ""));
+            }
+        });
+        // HBoxにデバッグ用のUIをまとめる
+        debugPathBox = new HBox(5, debugPathLabel, debugPathInput, selectDebugZipButton);
+        // 最初は非表示にしておく
+        debugPathBox.setVisible(false);
+        debugPathBox.setManaged(false); // 非表示の際にレイアウトスペースを確保しない
+
+        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
+        localTestButton.setOnAction(event -> {
+            // ★ 修正: メンバー変数のTextFieldからパスを取得する
+            String localZipPath = debugPathInput.getText();
+            logArea.appendText("ローカルテストを開始します...\n");
+            logArea.appendText("ローカルの '" + localZipPath + "' を解凍しています...\n");
+            try {
+                unzip(localZipPath, "temp_upgrade");
+                logArea.appendText("解凍が完了しました。\n");
+                processManifest("temp_upgrade/manifest.json");
+            } catch (IOException e) {
+                logArea.appendText("エラー: ローカルテスト中に失敗しました - " + e.getMessage() + "\n");
+            }
+        });
+        // ボタンのイベント処理
         selectDirButton.setOnAction(event -> handleDirectorySelection());
         setPathButton.setOnAction(event -> handlePathInput());
         updateButton.setOnAction(event -> checkForUpdates());
 
-        leftPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton, logArea, progressBar);
-
-        // ★★★ BorderPaneの中央にメインコンテンツを配置 ★★★
-        root.setCenter(leftPane);
+        // VBoxに「常に表示する」UI要素だけを追加
+        contentPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton, logArea, progressBar);
+        root.setCenter(contentPane);
 
         // --- 起動時の処理 ---
         loadProperties();
         debugMenuItem.setSelected(DEBUG_MODE);
-        // デバッグモードが有効なら、テストボタンを追加
-        if (DEBUG_MODE) {
-            Button localTestButton = new Button("ローカルテスト実行 (DEBUG)");
-            localTestButton.setOnAction(event -> {
-                // ... (ローカルテストの処理)
-            });
-            // updateButton(インデックス3)とlogArea(インデックス4)の間にボタンを挿入
-            leftPane.getChildren().add(4, localTestButton);
-        }
+        updateDebugUI(); // UIの初期状態を正しく設定
 
-        Scene scene = new Scene(root, 500, 450); // メニューバー分、少し高さを広げます
+        Scene scene = new Scene(root, 500, 450);
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private void updateDebugUI() {
+        boolean isVisible = DEBUG_MODE;
+
+        // デバッグ用UIの表示/非表示を切り替える
+        localTestButton.setVisible(isVisible);
+        localTestButton.setManaged(isVisible);
+        debugPathBox.setVisible(isVisible);
+        debugPathBox.setManaged(isVisible);
+
+        // VBox内の要素を一度クリアしてから再構築する
+        contentPane.getChildren().clear();
+        contentPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton);
+
+        if (isVisible) {
+            // デバッグモードが有効な場合、デバッグ用UIを追加
+            contentPane.getChildren().add(debugPathBox);
+            contentPane.getChildren().add(localTestButton);
+        }
+
+        // ログエリアとプログレスバーを常に追加
+        contentPane.getChildren().addAll(logArea, progressBar);
+
+        // ウィンドウタイトルの更新
+        if (isVisible) {
+            primaryStage.setTitle("Modpack Updater (v" + APP_VERSION + ") [DEBUG MODE]");
+        } else {
+            primaryStage.setTitle("Modpack Updater (v" + APP_VERSION + ")");
+        }
     }
 
     private void checkForUpdates() {
@@ -402,13 +478,13 @@ public class HelloApplication extends Application {
         logArea.appendText("ゲームディレクトリが設定されました: " + newPath + "\n");
         saveProperties(newPath);
     }
-
     private void saveProperties(String gameDirectory) {
         Path configFile = getConfigFilePath();
         try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.setProperty("game_directory", gameDirectory);
             properties.setProperty("debug_mode", String.valueOf(DEBUG_MODE));
-            properties.setProperty("debug_local_zip_path", DEBUG_LOCAL_ZIP_PATH);
+            // ★ 修正: TextFieldから値を取得して保存
+            properties.setProperty("debug_local_zip_path", debugPathInput.getText());
             properties.store(out, "Modpack Updater Settings");
             logArea.appendText("設定を " + configFile.toString() + " に保存しました。\n");
         } catch (IOException e) {
@@ -425,6 +501,7 @@ public class HelloApplication extends Application {
         try (InputStreamReader in = new InputStreamReader(new FileInputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.load(in);
 
+            // ゲームディレクトリを読み込む
             String gameDirectory = properties.getProperty("game_directory");
             if (gameDirectory != null && !gameDirectory.isEmpty()) {
                 pathInput.setText(gameDirectory);
@@ -432,19 +509,17 @@ public class HelloApplication extends Application {
                 logArea.appendText("設定を " + configFile.toString() + " から読み込みました。\n");
             }
 
+            // デバッグモード設定を読み込む
             DEBUG_MODE = Boolean.parseBoolean(properties.getProperty("debug_mode", "false"));
-            if (DEBUG_MODE) {
-                DEBUG_LOCAL_ZIP_PATH = properties.getProperty("debug_local_zip_path", "upgrade.zip");
-                logArea.appendText("★★ デバッグモードが有効です ★★\n");
-                if (primaryStage != null) { // primaryStageが初期化済みか確認
-                    primaryStage.setTitle(primaryStage.getTitle() + " [DEBUG MODE]");
-                }
-            }
+
+            // ★ 修正: 読み込んだ値をTextFieldに設定
+            String debugZipPath = properties.getProperty("debug_local_zip_path", "upgrade.zip");
+            debugPathInput.setText(debugZipPath);
+
         } catch (IOException e) {
             logArea.appendText("設定の読み込み中にエラーが発生しました: " + e.getMessage() + "\n");
         }
     }
-
     public static void main(String[] args) {
         launch(args);
     }
