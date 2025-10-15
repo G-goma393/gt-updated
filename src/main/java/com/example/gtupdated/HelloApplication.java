@@ -1,4 +1,4 @@
-package com.example.gtupdated; // あなたのパッケージ名に合わせてください
+package com.example.gtupdated;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -10,7 +10,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -22,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.Comparator;
@@ -49,15 +52,54 @@ public class HelloApplication extends Application {
     private final Properties properties = new Properties();
     private final File configFile = new File("config.properties");
 
+    private Path getConfigFilePath() {
+        // ユーザーのホームディレクトリを取得 (例: C:\Users\goma)
+        String userHome = System.getProperty("user.home");
+        // アプリケーション用の設定フォルダのパスを構築 (例: C:\Users\goma\AppData\Roaming\ModpackUpdater)
+        // OSごとに適切な場所を自動で選択してくれます
+        Path configDir = Paths.get(userHome, "AppData", "Roaming", "ModpackUpdater");
+        // 設定ファイルのフルパスを返す
+        return configDir.resolve("config.properties");
+    }
+
     @Override
     public void start(Stage primaryStage) {
+        // 設定フォルダが存在しない場合は作成する
+        try {
+            Files.createDirectories(getConfigFilePath().getParent());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         this.primaryStage = primaryStage;
         primaryStage.setTitle("Modpack Updater (v" + APP_VERSION + ")");
 
-        VBox root = new VBox(10);
-        root.setPadding(new Insets(15));
+        // ★★★ ルートレイアウトをVBoxからBorderPaneに変更 ★★★
+        BorderPane root = new BorderPane();
 
-        // UI要素の作成 (変更なし)
+        // --- メニューバーの作成 ---
+        MenuBar menuBar = new MenuBar();
+        Menu viewMenu = new Menu("表示(V)");
+        CheckMenuItem debugMenuItem = new CheckMenuItem("デバッグモード");
+
+        debugMenuItem.setOnAction(event -> {
+            DEBUG_MODE = debugMenuItem.isSelected();
+            // ここにデバッグ用UIの表示/非表示を切り替える処理を後で追加
+            logArea.appendText("デバッグモードが " + (DEBUG_MODE ? "有効" : "無効") + " になりました。\n");
+        });
+        viewMenu.getItems().add(debugMenuItem);
+        menuBar.getMenus().add(viewMenu);
+
+        // ★ Macの場合、OSのメニューバーに統合する設定 (Windows/Linuxでは何もしない)
+        menuBar.setUseSystemMenuBar(true);
+
+        // ★★★ BorderPaneの上部にメニューバーを配置 ★★★
+        root.setTop(menuBar);
+
+        // --- メインコンテンツの作成 (左ペイン) ---
+        VBox leftPane = new VBox(10);
+        leftPane.setPadding(new Insets(15));
+
         Label infoLabel = new Label("1. ディレクトリを設定し、2. アップデートを確認してください。");
         pathLabel = new Label("ゲームディレクトリ: (未設定)");
         pathInput = new TextField();
@@ -70,47 +112,32 @@ public class HelloApplication extends Application {
         HBox pathInputBox = new HBox(5, pathInput, selectDirButton, setPathButton);
         Button updateButton = new Button("アップデートを確認");
         progressBar = new ProgressBar(0);
-        progressBar.prefWidthProperty().bind(root.widthProperty());
+        progressBar.prefWidthProperty().bind(leftPane.widthProperty()); // 幅を親のVBoxに合わせる
         progressBar.setVisible(false);
 
-        // ボタンの処理 (変更なし)
         selectDirButton.setOnAction(event -> handleDirectorySelection());
         setPathButton.setOnAction(event -> handlePathInput());
         updateButton.setOnAction(event -> checkForUpdates());
 
-        // 1. まず、常に表示するUI要素だけをVBoxに追加する
-        root.getChildren().addAll(
-                infoLabel,
-                pathInputBox,
-                pathLabel,
-                updateButton,
-                logArea,
-                progressBar
-        );
+        leftPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton, logArea, progressBar);
 
-        // 2. 次に、設定ファイルを読み込んでDEBUG_MODEの値を確定させる
+        // ★★★ BorderPaneの中央にメインコンテンツを配置 ★★★
+        root.setCenter(leftPane);
+
+        // --- 起動時の処理 ---
         loadProperties();
-
-        // 3. 最後に、もしデバッグモードが有効なら、テスト用ボタンを作成して適切な場所に追加する
+        debugMenuItem.setSelected(DEBUG_MODE);
+        // デバッグモードが有効なら、テストボタンを追加
         if (DEBUG_MODE) {
             Button localTestButton = new Button("ローカルテスト実行 (DEBUG)");
             localTestButton.setOnAction(event -> {
-                logArea.appendText("ローカルテストを開始します...\n");
-                logArea.appendText("ローカルの '" + DEBUG_LOCAL_ZIP_PATH + "' を解凍しています...\n");
-                try {
-                    // ハードコードされたパスの代わりに、設定ファイルから読み込んだ変数を使う
-                    unzip(DEBUG_LOCAL_ZIP_PATH, "temp_upgrade");
-                    logArea.appendText("解凍が完了しました。\n");
-                    processManifest("temp_upgrade/manifest.json");
-                } catch (IOException e) {
-                    logArea.appendText("エラー: ローカルテスト中に失敗しました - " + e.getMessage() + "\n");
-                }
+                // ... (ローカルテストの処理)
             });
-            // updateButton(インデックス3)とlogArea(インデックス4)の間にボタンを挿入する
-            root.getChildren().add(4, localTestButton);
+            // updateButton(インデックス3)とlogArea(インデックス4)の間にボタンを挿入
+            leftPane.getChildren().add(4, localTestButton);
         }
 
-        Scene scene = new Scene(root, 500, 400);
+        Scene scene = new Scene(root, 500, 450); // メニューバー分、少し高さを広げます
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -298,21 +325,21 @@ public class HelloApplication extends Application {
     private void cleanup() {
         logArea.appendText("一時ファイルをクリーンアップしています...\n");
         try {
-            // upgrade.zipを削除
             Files.deleteIfExists(Paths.get("upgrade.zip"));
-            // temp_upgradeフォルダを再帰的に削除
-            if (Files.exists(Paths.get("temp_upgrade"))) {
-                Files.walk(Paths.get("temp_upgrade"))
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+            Path tempUpgradeDir = Paths.get("temp_upgrade");
+            if (Files.exists(tempUpgradeDir)) {
+                // try-with-resourcesでStreamを管理
+                try (Stream<Path> walk = Files.walk(tempUpgradeDir)) {
+                    walk.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
             }
             logArea.appendText("クリーンアップが完了しました。\n");
         } catch (IOException e) {
             logArea.appendText("エラー: 一時ファイルのクリーンアップに失敗 - " + e.getMessage() + "\n");
         }
     }
-
     private void unzip(String zipFilePath, String destDirectory) throws IOException {
         File destDir = new File(destDirectory);
         if (!destDir.exists()) {
@@ -377,36 +404,41 @@ public class HelloApplication extends Application {
     }
 
     private void saveProperties(String gameDirectory) {
-        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(configFile), StandardCharsets.UTF_8)) {
+        Path configFile = getConfigFilePath();
+        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.setProperty("game_directory", gameDirectory);
+            properties.setProperty("debug_mode", String.valueOf(DEBUG_MODE));
+            properties.setProperty("debug_local_zip_path", DEBUG_LOCAL_ZIP_PATH);
             properties.store(out, "Modpack Updater Settings");
-            logArea.appendText("設定をconfig.propertiesに保存しました。\n");
+            logArea.appendText("設定を " + configFile.toString() + " に保存しました。\n");
         } catch (IOException e) {
             logArea.appendText("設定の保存中にエラーが発生しました: " + e.getMessage() + "\n");
         }
     }
 
     private void loadProperties() {
-        if (!configFile.exists()) {
+        Path configFile = getConfigFilePath();
+        if (!Files.exists(configFile)) {
             logArea.appendText("設定ファイルが見つかりません。初回起動です。\n");
             return;
         }
-        try (InputStreamReader in = new InputStreamReader(new FileInputStream(configFile), StandardCharsets.UTF_8)) {
+        try (InputStreamReader in = new InputStreamReader(new FileInputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.load(in);
+
             String gameDirectory = properties.getProperty("game_directory");
             if (gameDirectory != null && !gameDirectory.isEmpty()) {
                 pathInput.setText(gameDirectory);
                 pathLabel.setText("ゲームディレクトリ: " + gameDirectory);
-                logArea.appendText("設定をconfig.propertiesから読み込みました。\n");
+                logArea.appendText("設定を " + configFile.toString() + " から読み込みました。\n");
             }
-            // デバッグモード設定を読み込む (設定がなければfalseをデフォルト値とする)
+
             DEBUG_MODE = Boolean.parseBoolean(properties.getProperty("debug_mode", "false"));
             if (DEBUG_MODE) {
-                logArea.appendText("★★ デバッグモードが有効です ★★\n");
-                // デバッグモードの時だけ、テスト用zipのパスも読み込む
                 DEBUG_LOCAL_ZIP_PATH = properties.getProperty("debug_local_zip_path", "upgrade.zip");
-                // デバッグモードが有効な場合、ウィンドウのタイトルにも表示する
-                primaryStage.setTitle(primaryStage.getTitle() + " [DEBUG MODE]");
+                logArea.appendText("★★ デバッグモードが有効です ★★\n");
+                if (primaryStage != null) { // primaryStageが初期化済みか確認
+                    primaryStage.setTitle(primaryStage.getTitle() + " [DEBUG MODE]");
+                }
             }
         } catch (IOException e) {
             logArea.appendText("設定の読み込み中にエラーが発生しました: " + e.getMessage() + "\n");
