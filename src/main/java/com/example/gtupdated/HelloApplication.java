@@ -9,9 +9,8 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -23,6 +22,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -58,6 +58,8 @@ public class HelloApplication extends Application {
     private Button updateButton;
     private MenuBar menuBar;
     private Menu debugMenu;
+    private TextArea changelogArea;
+    private Label statusLabel;
 
 
     private final Properties properties = new Properties();
@@ -123,9 +125,9 @@ public class HelloApplication extends Application {
         VBox bottomPane = createBottomPane();
 
         // --- 中央エリアをSplitPaneで分割 ---
-        SplitPane.splitPane = new SplitPane();
-        splitPane.getItem().addAll(leftPane, rightPane);
-        splitPane.setDividerPositions(0.6);
+        SplitPane splitPane = new SplitPane();
+        splitPane.getItems().addAll(leftPane, rightPane);
+        splitPane.setDividerPositions(0.6); // 左側が60%の幅になるように初期設定
 
         root.setCenter(splitPane);
         root.setBottom(bottomPane);
@@ -220,16 +222,82 @@ public class HelloApplication extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
-
-    private VBox createLeftPane(){
+    private VBox createLeftPane() {
         // --- UI要素の作成 ---
         Label gameDirLabel = new Label("ゲームディレクトリを選択");
         pathInput = new TextField();
         pathInput.setPromptText("ここにゲームディレクトリのパスを貼り付け");
 
-        // ボタンにアイコンを設定
-        Image folderIron = new Image(getClass().getResourceAsStream("folder-icon.png"));
-        //kokokara
+        InputStream iconStream = getClass().getResourceAsStream("/folder-icon.png");
+        Objects.requireNonNull(iconStream, "アイコンファイルが見つかりません: folder-icon.png");
+        Image folderIcon = new Image(iconStream);
+        Button selectDirButton = new Button("", new ImageView(folderIcon));
+        selectDirButton.setPrefSize(32, 32); // アイコンが見えるようにサイズを固定
+
+        debugPathBox = new HBox(5, debugPathInput, selectDebugZipButton);
+        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
+        Pane spacer = new Pane();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        pathLabel = new Label("ゲームディレクトリ: (未設定)");
+
+        // ★ デバッグ用UIの作成
+        Label debugPathLabel = new Label("テスト用Zipパス");
+        debugPathInput = new TextField();
+        Button selectDebugZipButton = new Button("", new ImageView(folderIcon)); // 同じアイコンを再利用
+        debugPathBox = new HBox(5, debugPathInput, selectDebugZipButton);
+        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
+
+        // ★「空のスペース」を表現するためのPane (伸縮してスペースを埋める)
+        Pane spacer = new Pane();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        // --- イベント処理 ---
+        selectDirButton.setOnAction(event -> handleDirectorySelection());
+        setPathButton.setOnAction(event -> handlePathInput());
+        selectDebugZipButton.setOnAction(event -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("テスト用のupgrade.zipを選択");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("ZIP Archives", "*.zip"));
+            File selectedFile = chooser.showOpenDialog(primaryStage);
+            if (selectedFile != null) {
+                debugPathInput.setText(selectedFile.getAbsolutePath());
+                saveProperties(properties.getProperty("game_directory", ""));
+            }
+        });
+        localTestButton.setOnAction(event -> {
+            // ... (以前のlocalTestButtonの処理) ...
+        });
+
+        // --- VBoxに要素を追加 ---
+        VBox leftPane = new VBox(10, gameDirLabel, gamePathBox, pathLabel, debugPathLabel, debugPathBox, localTestButton, spacer);
+        leftPane.setPadding(new Insets(15));
+        return leftPane;
+    }
+
+    private VBox createRightPane() {
+        Label versionLabel = new Label("modpack version: (不明)");
+        updateButton = new Button("アップデートを確認");
+        changelogArea = new TextArea();
+        changelogArea.setPromptText("ここに更新履歴が表示されます...");
+        changelogArea.setEditable(false);
+        VBox.setVgrow(changelogArea, Priority.ALWAYS); // TextAreaが縦に伸びるように設定
+
+        updateButton.setOnAction(event -> checkForUpdates());
+
+        VBox rightPane = new VBox(10, versionLabel, updateButton, changelogArea);
+        rightPane.setPadding(new Insets(15));
+        return rightPane;
+    }
+    private VBox createBottomPane() {
+        progressBar = new ProgressBar(0);
+        statusLabel = new Label("準備完了"); // 新しい1行ログ用のラベル
+
+        progressBar.prefWidthProperty().bind(primaryStage.widthProperty()); // 幅をウィンドウ全体に合わせる
+        progressBar.setVisible(false);
+
+        VBox bottomPane = new VBox(5, statusLabel, progressBar);
+        bottomPane.setPadding(new Insets(10));
+        return bottomPane;
     }
 
     private void updateDebugUI() {
@@ -300,15 +368,32 @@ public class HelloApplication extends Application {
 
     private void showUpdatePopup(String newVersion, String changelog, String downloadUrl) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("アップデートが見つかりました");
-        alert.setHeaderText("新しいバージョン " + newVersion + " が利用可能です。");
-        alert.setContentText("更新内容:\n" + changelog);
+        alert.setTitle("GT Updated vx.x.x");
+        alert.setHeaderText(null); // ヘッダーテキストは不要なのでnullに
+
+        // --- カスタムボタンの作成 ---
+        ButtonType updateButtonType = new ButtonType("更新", ButtonBar.ButtonData.OK_DONE);
+        ButtonType skipButtonType = new ButtonType("スキップ", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(updateButtonType, skipButtonType);
+
+        // --- カスタムレイアウトの作成 ---
+        Label titleLabel = new Label("新しいアップデートがありました");
+        Label versionFlowLabel = new Label("ver" + APP_VERSION + " → ver" + newVersion);
+        TextArea changelogArea = new TextArea(changelog);
+        changelogArea.setEditable(false);
+        changelogArea.setWrapText(true);
+
+        VBox content = new VBox(10, titleLabel, versionFlowLabel, changelogArea);
+        content.setPadding(new Insets(10));
+
+        // --- アラートにカスタムレイアウトを設定 ---
+        alert.getDialogPane().setContent(content);
 
         Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
+        if (result.isPresent() && result.get() == updateButtonType) {
             startDownload(downloadUrl);
         } else {
-            logArea.appendText("アップデートがキャンセルされました。\n");
+            statusLabel.setText("アップデートがキャンセルされました。");
         }
     }
 
