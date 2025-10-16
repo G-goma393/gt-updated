@@ -53,6 +53,11 @@ public class HelloApplication extends Application {
     private Button localTestButton;
     private HBox debugPathBox;
     private TextField debugPathInput;
+    private Label infoLabel;
+    private HBox pathInputBox;
+    private Button updateButton;
+    private MenuBar menuBar;
+    private Menu debugMenu;
 
 
     private final Properties properties = new Properties();
@@ -67,6 +72,7 @@ public class HelloApplication extends Application {
         // 設定ファイルのフルパスを返す
         return configDir.resolve("config.properties");
     }
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -84,7 +90,7 @@ public class HelloApplication extends Application {
         BorderPane root = new BorderPane();
 
         // --- メニューバー ---
-        MenuBar menuBar = new MenuBar();
+        menuBar = new MenuBar();
         Menu viewMenu = new Menu("表示(V)");
         CheckMenuItem debugMenuItem = new CheckMenuItem("デバッグモード");
 
@@ -96,8 +102,33 @@ public class HelloApplication extends Application {
         });
         viewMenu.getItems().add(debugMenuItem);
         menuBar.getMenus().add(viewMenu);
+        // --- デバッグメニューの作成 ---
+        debugMenu = new Menu("デバッグ(D)");
+        MenuItem testPopupItem = new MenuItem("ポップアップをテスト");
+        testPopupItem.setOnAction(event -> {
+            logArea.appendText("デバッグ: ポップアップテストを実行します。\n");
+            showUpdatePopup("v9.9.9 (Test)", "・これはテスト用の変更履歴です。\n・ポップアップが正しく表示されています。", "http://example.com/test.zip");
+        });
+        MenuItem testProgressBarItem = new MenuItem("プログレスバーをテスト");
+        testProgressBarItem.setOnAction(event -> testProgressBar());
+
+        // メニュー項目をデバッグメニューに追加
+        debugMenu.getItems().addAll(testPopupItem, testProgressBarItem);
         menuBar.setUseSystemMenuBar(true);
         root.setTop(menuBar);
+
+        // --- UIの各パーツを専用メソッドで作成 ---
+        VBox leftPane = createLeftPane();
+        VBox rightPane = createRightPane();
+        VBox bottomPane = createBottomPane();
+
+        // --- 中央エリアをSplitPaneで分割 ---
+        SplitPane.splitPane = new SplitPane();
+        splitPane.getItem().addAll(leftPane, rightPane);
+        splitPane.setDividerPositions(0.6);
+
+        root.setCenter(splitPane);
+        root.setBottom(bottomPane);
 
         // --- メインコンテンツ ---
         // ★ 修正点: contentPaneの重複宣言を削除し、メンバー変数を正しく初期化
@@ -105,7 +136,7 @@ public class HelloApplication extends Application {
         contentPane.setPadding(new Insets(15));
 
         // UI要素の作成
-        Label infoLabel = new Label("1. ディレクトリを設定し、2. アップデートを確認してください。");
+        infoLabel = new Label("1. ディレクトリを設定し、2. アップデートを確認してください。");
         pathLabel = new Label("ゲームディレクトリ: (未設定)");
         pathInput = new TextField();
         pathInput.setPromptText("ここにゲームディレクトリのパスを貼り付け");
@@ -114,8 +145,8 @@ public class HelloApplication extends Application {
         logArea.setEditable(false);
         Button selectDirButton = new Button("参照...");
         Button setPathButton = new Button("設定");
-        HBox pathInputBox = new HBox(5, pathInput, selectDirButton, setPathButton);
-        Button updateButton = new Button("アップデートを確認");
+        pathInputBox = new HBox(5, pathInput, selectDirButton, setPathButton);
+        updateButton = new Button("アップデートを確認");
         progressBar = new ProgressBar(0);
         progressBar.prefWidthProperty().bind(contentPane.widthProperty());
         progressBar.setVisible(false);
@@ -173,6 +204,8 @@ public class HelloApplication extends Application {
         setPathButton.setOnAction(event -> handlePathInput());
         updateButton.setOnAction(event -> checkForUpdates());
 
+
+
         // VBoxに「常に表示する」UI要素だけを追加
         contentPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton, logArea, progressBar);
         root.setCenter(contentPane);
@@ -182,10 +215,21 @@ public class HelloApplication extends Application {
         debugMenuItem.setSelected(DEBUG_MODE);
         updateDebugUI(); // UIの初期状態を正しく設定
 
-        Scene scene = new Scene(root, 500, 450);
+        Scene scene = new Scene(root, 800, 600);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private VBox createLeftPane(){
+        // --- UI要素の作成 ---
+        Label gameDirLabel = new Label("ゲームディレクトリを選択");
+        pathInput = new TextField();
+        pathInput.setPromptText("ここにゲームディレクトリのパスを貼り付け");
+
+        // ボタンにアイコンを設定
+        Image folderIron = new Image(getClass().getResourceAsStream("folder-icon.png"));
+        //kokokara
     }
 
     private void updateDebugUI() {
@@ -202,9 +246,17 @@ public class HelloApplication extends Application {
         contentPane.getChildren().addAll(infoLabel, pathInputBox, pathLabel, updateButton);
 
         if (isVisible) {
-            // デバッグモードが有効な場合、デバッグ用UIを追加
+            // デバッグモードが有効な場合
             contentPane.getChildren().add(debugPathBox);
             contentPane.getChildren().add(localTestButton);
+            // もしメニューバーにデバッグメニューがなければ追加する
+            if (!menuBar.getMenus().contains(debugMenu)) {
+                menuBar.getMenus().add(debugMenu);
+            }
+        } else {
+            // デバッグモードが無効な場合
+            // メニューバーからデバッグメニューを削除する
+            menuBar.getMenus().remove(debugMenu);
         }
 
         // ログエリアとプログレスバーを常に追加
@@ -519,8 +571,41 @@ public class HelloApplication extends Application {
         } catch (IOException e) {
             logArea.appendText("設定の読み込み中にエラーが発生しました: " + e.getMessage() + "\n");
         }
+
     }
+
     public static void main(String[] args) {
         launch(args);
     }
+    private void testProgressBar() {
+        logArea.appendText("デバッグ: プログレスバーのテストを開始します... (5秒で完了します)\n");
+        progressBar.setVisible(true);
+
+        // ダミーのTaskを作成
+        Task<Void> dummyTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // 100回のループで進捗をシミュレート
+                for (int i = 0; i < 100; i++) {
+                    // 50ミリ秒待機 (50ms * 100回 = 5000ms = 5秒)
+                    Thread.sleep(50);
+                    // UIに進捗を通知 (i+1 が現在の進捗, 100が最大値)
+                    updateProgress(i + 1, 100);
+                }
+                return null;
+            }
+        };
+        // Taskの進捗とProgressBarの進捗を連動させる
+        progressBar.progressProperty().bind(dummyTask.progressProperty());
+
+        // Taskが完了した時の処理
+        dummyTask.setOnSucceeded(event -> {
+            logArea.appendText("デバッグ: プログレスバーのテストが完了しました。\n");
+            progressBar.progressProperty().unbind(); // 連動を解除
+        });
+
+        // 新しいスレッドでTaskを開始
+        new Thread(dummyTask).start();
+    }
+
 }

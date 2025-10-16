@@ -1,0 +1,23 @@
+{
+  "operations": [
+    {
+      "action": "delete",
+      "target": "mods/old-and-unused-mod-1.2.3.jar"
+    },
+    {
+      "action": "copy",
+      "source": "mods/new-cool-mod-4.5.6.jar",
+      "destination": "mods/new-cool-mod-4.5.6.jar"
+    },
+    {
+      "action": "copy",
+      "source": "config/some-specific-config.toml",
+      "destination": "config/some-specific-config.toml"
+    },
+    {
+      "action": "copy",
+      "source": "scripts/",
+      "destination": "scripts/"
+    }
+  ]
+}
