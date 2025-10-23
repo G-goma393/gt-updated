@@ -225,36 +225,40 @@ public class HelloApplication extends Application {
     private VBox createLeftPane() {
         // --- UI要素の作成 ---
         Label gameDirLabel = new Label("ゲームディレクトリを選択");
-        pathInput = new TextField();
+        pathInput = new TextField(); // Member variable
         pathInput.setPromptText("ここにゲームディレクトリのパスを貼り付け");
 
+        // --- Game Path Section ---
         InputStream iconStream = getClass().getResourceAsStream("/folder-icon.png");
         Objects.requireNonNull(iconStream, "アイコンファイルが見つかりません: folder-icon.png");
         Image folderIcon = new Image(iconStream);
-        Button selectDirButton = new Button("", new ImageView(folderIcon));
-        selectDirButton.setPrefSize(32, 32); // アイコンが見えるようにサイズを固定
+        Button selectDirButton = new Button("", new ImageView(folderIcon)); // Local variable for game path
+        selectDirButton.setPrefSize(32, 32);
+        Button setPathButton = new Button("設定"); // Local variable for game path
+        HBox gamePathBox = new HBox(5, pathInput, selectDirButton, setPathButton); // Use local buttons
+        pathLabel = new Label("ゲームディレクトリ: (未設定)"); // Member variable
 
-        debugPathBox = new HBox(5, debugPathInput, selectDebugZipButton);
-        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
-        Pane spacer = new Pane();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        pathLabel = new Label("ゲームディレクトリ: (未設定)");
-
-        // ★ デバッグ用UIの作成
+        // --- Debug Section ---
         Label debugPathLabel = new Label("テスト用Zipパス");
-        debugPathInput = new TextField();
-        Button selectDebugZipButton = new Button("", new ImageView(folderIcon)); // 同じアイコンを再利用
-        debugPathBox = new HBox(5, debugPathInput, selectDebugZipButton);
-        localTestButton = new Button("ローカルテスト実行 (DEBUG)");
+        debugPathInput = new TextField(); // Member variable
 
-        // ★「空のスペース」を表現するためのPane (伸縮してスペースを埋める)
+        // Re-read the icon stream as it's consumed by the Image constructor
+        InputStream iconStream2 = getClass().getResourceAsStream("/folder-icon.png");
+        Objects.requireNonNull(iconStream2, "アイコンファイルが見つかりません: folder-icon.png");
+        Image folderIcon2 = new Image(iconStream2);
+        Button selectDebugZipButton = new Button("", new ImageView(folderIcon2)); // Local variable for debug path
+        selectDebugZipButton.setPrefSize(32, 32);
+        debugPathBox = new HBox(5, debugPathInput, selectDebugZipButton); // Use local button, assign to member HBox
+        localTestButton = new Button("ローカルテスト実行 (DEBUG)"); // Member variable
+
+        // --- Spacer ---
         Pane spacer = new Pane();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         // --- イベント処理 ---
         selectDirButton.setOnAction(event -> handleDirectorySelection());
         setPathButton.setOnAction(event -> handlePathInput());
-        selectDebugZipButton.setOnAction(event -> {
+        selectDebugZipButton.setOnAction(event -> { // Use the local debug button variable
             FileChooser chooser = new FileChooser();
             chooser.setTitle("テスト用のupgrade.zipを選択");
             chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("ZIP Archives", "*.zip"));
@@ -264,11 +268,26 @@ public class HelloApplication extends Application {
                 saveProperties(properties.getProperty("game_directory", ""));
             }
         });
-        localTestButton.setOnAction(event -> {
-            // ... (以前のlocalTestButtonの処理) ...
+        localTestButton.setOnAction(event -> { // Member button already has handler set in start() if needed, or set here
+            String localZipPath = debugPathInput.getText();
+            logArea.appendText("ローカルテストを開始します...\n");
+            logArea.appendText("ローカルの '" + localZipPath + "' を解凍しています...\n");
+            try {
+                unzip(localZipPath, "temp_upgrade");
+                logArea.appendText("解凍が完了しました。\n");
+                processManifest("temp_upgrade/manifest.json");
+            } catch (IOException e) {
+                logArea.appendText("エラー: ローカルテスト中に失敗しました - " + e.getMessage() + "\n");
+            }
         });
 
         // --- VBoxに要素を追加 ---
+        // Ensure debugPathBox and localTestButton are managed correctly by updateDebugUI initially
+        debugPathBox.setVisible(false);
+        debugPathBox.setManaged(false);
+        localTestButton.setVisible(false);
+        localTestButton.setManaged(false);
+
         VBox leftPane = new VBox(10, gameDirLabel, gamePathBox, pathLabel, debugPathLabel, debugPathBox, localTestButton, spacer);
         leftPane.setPadding(new Insets(15));
         return leftPane;
