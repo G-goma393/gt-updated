@@ -1,0 +1,33 @@
+package com.example.gtupdated;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import java.io.*;
+import java.nio.file.*;
+
+public class MainApp extends Application {
+    @Override
+    public void start(Stage primaryStage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("thisExample.fxml")); // FXMLファイル名に合わせてください
+            Parent root = loader.load();
+            Controller controller = loader.getController();
+            controller.setStage(primaryStage);
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("com/example/gtupdated/style.css").toExternalForm());
+            primaryStage.setTitle("GT-Updated");
+            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("com/example/gtupdated/icon.png")));
+            primaryStage.setScene(scene);
+            primaryStage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

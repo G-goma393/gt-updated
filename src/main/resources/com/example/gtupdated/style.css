@@ -1,0 +1,76 @@
+/* * CSSが正しく読み込まれているかテストします。
+ * 全てのボタンの背景を青くし、文字を白くします。
+ */
+.root {
+    /* モダンなゴシック体フォントを指定 (PCにインストールされているものから選ばれる) */
+    -fx-font-family: "Noto Sans CJK JP", "Yu Gothic", "Meiryo", sans-serif;
+
+    /* アプリ全体の基本の背景色を、少し明るいグレーに設定 */
+    -fx-base: #FAFAFA; /* #f4f4f4 よりも明るい白に近いグレー */
+
+    /* 基本の文字色 (真っ黒(#000)は目が疲れるので、濃いグレーにする) */
+    -fx-text-fill: #333333;
+}
+
+.button {
+    -fx-background-color: #0078D7; /* JavaFXのCSSプロパティは -fx- で始まります */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+
+    -fx-background-radius: 4px; /* 角を少し丸める (3px〜5pxが一般的) */
+        -fx-effect: null;           /* デフォルトの影(drop shadow)を消す */
+        -fx-background-insets: 0;
+}
+
+/* ボタンにマウスが乗った時 (ホバー) のスタイル */
+.button:hover {
+    -fx-background-color: #005A9E; /* 少し濃い青 */
+}
+.button:pressed {
+    -fx-background-color: #004C8A; /* さらに濃い青 */
+    -fx-effect: null;
+}
+.content-pane {
+    /* AnchorPaneの内側に 10px の余白(padding)を追加 */
+    -fx-padding: 10px;
+}
+.secondary-button {
+    -fx-background-color: white; /* 背景を白に */
+    -fx-text-fill: #0078D7;      /* 文字をアクセントカラー(青)に */
+    -fx-border-color: #0078D7;  /* 枠線を青に */
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #F0F8FF; /* ホバー時、薄い青に */
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #E0F0FF; /* クリック時、少し濃い青 */
+}
+.icon-button {
+    -fx-graphic: url("folder-open.png");
+
+    /* ボタンの背景を透明にする */
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+
+    /* 枠線も消す */
+    -fx-border-color: transparent;
+
+    /* 余白を調整 (アイコンがピッタリすぎるのを防ぐ) */
+    -fx-padding: 4px;
+}
+
+/* アイコンボタンにマウスが乗った時 */
+.icon-button:hover {
+    /* 少し背景色を付けて、クリックできることを示す */
+    -fx-background-color: #E9E9E9;
+    -fx-background-radius: 4px; /* 角を丸める */
+}
+
+/* アイコンボタンが押された時 */
+.icon-button:pressed {
+    -fx-background-color: #DCDCDC; /* 少し濃いグレー */
+}
