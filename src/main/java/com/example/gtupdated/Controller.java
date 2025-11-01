@@ -18,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -37,8 +38,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static java.rmi.server.LogStream.log;
-
 public class Controller {
 
     private Stage primaryStage;
@@ -46,7 +45,6 @@ public class Controller {
     private static final String VERSION_URL = "http://YOUR_SERVER/version.json";
 
     @FXML private Button updateButton;
-    @FXML private TextField logTextField;
     @FXML private ProgressBar mainProgressBar;
     @FXML private AnchorPane leftPaneContainer;
     @FXML private AnchorPane rightPaneContainer;
@@ -55,7 +53,6 @@ public class Controller {
     @FXML private Label pathLabel;
     @FXML private TextArea changelogArea;
     @FXML private TextField statusLabel;
-    @FXML private TextField pathInput;
     @FXML private TextField debugPathInput;
     @FXML private Accordion debugAccordion;
     @FXML private TitledPane debugPane;
@@ -63,10 +60,15 @@ public class Controller {
     @FXML private Button localTestButton;
     @FXML private Button popupTestButton;
     @FXML private Button progressBarTestButton;
+    @FXML private Button applyDirectoryButton;
+    @FXML private Button selectDebugFileButton;
+    @FXML private CheckBox popupTestCheckBox;
+    @FXML private CheckBox progressBarTestCheckBox;
 
     public void setStage(Stage stage) {this.primaryStage = stage;}
     private final Properties properties = new Properties();
     private final File configFile = new File("config.properties");
+
 
     private Path getConfigFilePath() {
         // ユーザーのホームディレクトリを取得 (例: C:\Users\goma)
@@ -81,36 +83,54 @@ public class Controller {
         Path configFile = getConfigFilePath();
         try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.setProperty("game_directory", gameDirectory);
-            properties.setProperty("debug_local_zip_path", debugPathInput.getText());
             properties.store(out, "Modpack Updater Settings");
             log("設定を " + configFile.toString() + " に保存しました。\n");
         } catch (IOException e) {
             log("設定の保存中にエラーが発生しました: " + e.getMessage() + "\n");
         }
     }
+    /**
+     * config.propertiesファイルから設定を読み込み、UIに反映します。
+     */
     private void loadProperties() {
+        // getConfigFilePath() は Controller.java に移植されている必要があります
         Path configFile = getConfigFilePath();
+
         if (!Files.exists(configFile)) {
-            log("設定ファイルが見つかりません。初回起動です。\n");
+            log("設定ファイルが見つかりません。初回起動です。");
             return;
         }
+
         try (InputStreamReader in = new InputStreamReader(new FileInputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
             properties.load(in);
 
-            // ゲームディレクトリを読み込む
+            // ゲームディレクトリのパスを取得
             String gameDirectory = properties.getProperty("game_directory");
-            if (gameDirectory != null && !gameDirectory.isEmpty()) {
-                pathInput.setText(gameDirectory);
-                pathLabel.setText("ゲームディレクトリ: " + gameDirectory);
-                log("設定を " + configFile.toString() + " から読み込みました。\n");
-            }
+            // デバッグ用Zipのパスを取得（デフォルト値は "upgrade.zip"）
             String debugZipPath = properties.getProperty("debug_local_zip_path", "upgrade.zip");
-            debugPathInput.setText(debugZipPath);
+
+            // UIの更新は、必ずJavaFXアプリケーションスレッドで行います
+            Platform.runLater(() -> {
+                // ゲームディレクトリのUIを更新
+                if (gameDirectory != null && !gameDirectory.isEmpty()) {
+                    // 1. 入力欄（TextField）にパスを設定
+                    directoryTextField.setText(gameDirectory);
+                    // 2. 表示用ラベルにもパスを設定
+                    pathLabel.setText("ゲームディレクトリ: " + gameDirectory);
+
+                    log("設定を " + configFile.toString() + " から読み込みました。");
+                }
+
+                // デバッグ用UI（アコーディオン内のTextField）を更新
+                // FXMLに fx:id="debugPathInput" が定義されていれば、nullではなく正しく設定されます
+                if (debugPathInput != null) {
+                    debugPathInput.setText(debugZipPath);
+                }
+            });
 
         } catch (IOException e) {
-            log("設定の読み込み中にエラーが発生しました: " + e.getMessage() + "\n");
+            log("設定の読み込み中にエラーが発生しました: " + e.getMessage());
         }
-
     }
     private void checkForUpdates() {
         log("アップデートサーバーにバージョン情報を問い合わせています...\n");
@@ -148,7 +168,7 @@ public class Controller {
         mainProgressBar.setProgress(0.0);
 
         // directoryTextField の初期テキストを "aaa" から変更する場合
-        directoryTextField.setText("/home/goma/...");
+        //directoryTextField.setText("/home/goma/...");
 
         loadProperties();
 
@@ -163,10 +183,37 @@ public class Controller {
     }
     @FXML
     protected void onSelectDirectoryClick() {
-        System.out.println("ディレクトリ選択ボタンがクリックされました。");
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setTitle("Minecraftのゲームディレクトリを選択してください");
 
-        handleDirectorySelection();
+        // 以前のパスがあれば、そこを初期表示する
+        File currentDir = new File(directoryTextField.getText());
+        if (currentDir.isDirectory()) {
+            chooser.setInitialDirectory(currentDir);
+        }
 
+        File selectedDirectory = chooser.showDialog(this.primaryStage);
+        if (selectedDirectory != null) {
+            // ★ 選択したパスをTextFieldに書き込むだけ
+            directoryTextField.setText(selectedDirectory.getAbsolutePath());
+            log("パスを選択しました。「適用」ボタンを押して設定を確定してください。");
+        } else {
+            log("フォルダ選択がキャンセルされました。");
+        }
+    }
+    // ★ FXMLの onAction="#onSelectDebugZipClick" に対応
+    @FXML
+    protected void onSelectDebugZipClick() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("テスト用のupgrade.zipを選択");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("ZIP Archives", "*.zip"));
+        File selectedFile = chooser.showOpenDialog(this.primaryStage);
+
+        if (selectedFile != null) {
+            // 仕様通り、TextFieldにパスを書き込むだけ（保存はしない）
+            debugPathInput.setText(selectedFile.getAbsolutePath());
+            log("テスト用Zipファイルを選択しました。");
+        }
     }
     @FXML
     protected void onTestProgressBarClick() {
@@ -188,6 +235,7 @@ public class Controller {
             }
         };
 
+
         // Taskが完了したら（成功したら）実行する処理
         progressTask.setOnSucceeded(event -> {
             log("プログレスバーのテスト完了。");
@@ -204,6 +252,28 @@ public class Controller {
         // 新しいスレッドを作成し、そのスレッドでTaskを実行する
         // (これを行わないとUIがフリーズします)
         new Thread(progressTask).start();
+    }
+    @FXML
+    protected void onApplyDirectoryClick() {
+        String newPath = directoryTextField.getText();
+        if (newPath == null || newPath.isEmpty()) {
+            log("エラー: パスが入力されていません。");
+            return;
+        }
+
+        File file = new File(newPath);
+        if (!file.isDirectory()) {
+            log("エラー: 指定されたパスは有効なディレクトリではありません。");
+            return;
+        }
+
+        // 1. pathLabel（表示用ラベル）を更新
+        pathLabel.setText("ゲームディレクトリ: " + newPath);
+
+        // 2. 設定ファイルに保存
+        saveProperties(newPath); // (古いHelloApplicationから移植したメソッド)
+
+        log("ゲームディレクトリが設定されました: " + newPath);
     }
     private void showUpdatePopup(String newVersion, String changelog, String downloadUrl) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -232,7 +302,7 @@ public class Controller {
         if (result.isPresent() && result.get() == updateButtonType) {
             startDownload(downloadUrl);
         } else {
-            statusLabel.setText("アップデートがキャンセルされました。");
+            log("アップデートがキャンセルされました。");
         }
     }
     private void startDownload(String url) {
@@ -438,7 +508,7 @@ public class Controller {
     }
 
     private void handlePathInput() {
-        String pathFromInput = pathInput.getText();
+        String pathFromInput = directoryTextField.getText();
         if (pathFromInput != null && !pathFromInput.isEmpty()) {
             updatePath(pathFromInput);
         } else {
@@ -446,7 +516,7 @@ public class Controller {
         }
     }
     private void updatePath(String newPath) {
-        pathInput.setText(newPath);
+        directoryTextField.setText(newPath);
         pathLabel.setText("ゲームディレクトリ: " + newPath);
         log("ゲームディレクトリが設定されました: " + newPath + "\n");
         saveProperties(newPath);
@@ -462,7 +532,8 @@ public class Controller {
         // 2. GUIのステータスバー（logTextField）を更新
         // バックグラウンドスレッドから呼ばれても安全なようにPlatform.runLaterで囲む
         Platform.runLater(() -> {
-            log(message);
+            // ★ 修正点: log(message) ではなく、UI要素を直接更新する
+            statusLabel.setText(message);
         });
     }
 
@@ -486,39 +557,25 @@ public class Controller {
     }
     @FXML
     void onLocalTestClick() {
-        // 古いHelloApplication.javaから持ってきたロジックをここに移植
         String localZipPath = debugPathInput.getText();
+
+        if (localZipPath == null || localZipPath.isEmpty()) {
+            log("エラー: テスト用Zipパスが指定されていません。");
+            return;
+        }
+
         log("ローカルテストを開始します...");
         log("ローカルの '" + localZipPath + "' を解凍しています...");
-        // ... try-catch で unzip, processManifest ...
+
         try {
+            // 移植したロジックを実行
             unzip(localZipPath, "temp_upgrade");
-            log("解凍が完了しました。\n");
+            log("解凍が完了しました。");
             processManifest("temp_upgrade/manifest.json");
         } catch (IOException e) {
-            log("エラー: ローカルテスト中に失敗しました - " + e.getMessage() + "\n");
+            log("エラー: ローカルテスト中に失敗しました - " + e.getMessage());
         }
     }
-    @FXML
-    void onPopupTestClick() {
-        log("ポップアップのテストが実行されました。");
-        log("テスト用ポップアップを表示します。");
-
-        // 1. Alertオブジェクトを作成
-        // Alert.AlertType.INFORMATION は「情報」ダイアログ（iアイコン）
-        // 他に .WARNING (警告), .ERROR (エラー), .CONFIRMATION (はい/いいえ) があります
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-
-        // 2. ダイアログの各部分のテキストを設定
-        alert.setTitle("テストポップアップ");
-        alert.setHeaderText("これはダミーの通知です。");
-        alert.setContentText("FXMLとコントローラーが正しく連携しました！");
-
-        // 3. ダイアログを表示し、ユーザーが閉じるまで待機
-        alert.showAndWait();
-        showUpdatePopup("v9.9.9 (Test)", "...", "http://example.com/test.zip");
-    }
-
     // プログレスバーのテスト
     @FXML
     void onProgressBarTestClick() {

@@ -105,9 +105,10 @@
                 <AnchorPane fx:id="leftPaneContainer" minHeight="0.0" minWidth="0.0" prefHeight="361.0" prefWidth="295.0" styleClass="content-pane">
                      <children>
                         <Label layoutX="16.0" layoutY="5.0" text="ゲームディレクトリを選択" />
-                        <TextField fx:id="pathInput" layoutX="20.0" layoutY="23.0" />
-                        <Label layoutX="20.0" layoutY="49.0" text="&quot;/home/gomadare&quot;" />
+                        <TextField fx:id="directoryTextField" layoutX="20.0" layoutY="23.0" />
+                        <Label fx:id="pathLabel" layoutX="20.0" layoutY="49.0" text="--- （未設定） ---" />
                         <Button fx:id="selectDirectoryButton" layoutX="173.0" layoutY="16.0" mnemonicParsing="false" onAction="#onSelectDirectoryClick" styleClass="icon-button" />
+                        <Button fx:id="applyDirectoryButton" layoutX="215.0" layoutY="23.0" mnemonicParsing="false" onAction="#onApplyDirectoryClick" text="適用" />
                         <Accordion layoutX="20.0" layoutY="165.0" maxWidth="1.7976931348623157E308" />
                       <TitledPane animated="false" layoutX="2.0" layoutY="125.0" maxWidth="1.7976931348623157E308" prefHeight="209.0" prefWidth="440.0" text="--- 開発者モード ---">
                         <content>
@@ -115,10 +116,10 @@
                                  <children>
                                     <Label layoutX="14.0" layoutY="4.0" text="テスト用Zipパス" />
                                     <TextField fx:id="debugPathInput" layoutX="14.0" layoutY="24.0" />
-                                    <Button layoutX="167.0" layoutY="17.0" mnemonicParsing="false" styleClass="icon-button" text="Button" />
-                                    <Button layoutX="14.0" layoutY="59.0" mnemonicParsing="false" text="ローカルテスト実行" />
-                                    <CheckBox layoutX="14.0" layoutY="100.0" mnemonicParsing="false" text="ポップアップのテスト" />
-                                    <CheckBox layoutX="14.0" layoutY="126.0" mnemonicParsing="false" text="プログレスバーのテスト" />
+                                    <Button fx:id="selectDebugZipButton" layoutX="167.0" layoutY="17.0" mnemonicParsing="false" onAction="#onSelectDebugZipClick" styleClass="icon-button" />
+                                    <Button fx:id="localTestButton" layoutX="14.0" layoutY="59.0" mnemonicParsing="false" onAction="#onLocalTestClick" text="ローカルテスト実行" />
+                                    <CheckBox fx:id="popupTestCheckBox" layoutX="14.0" layoutY="100.0" mnemonicParsing="false" text="ポップアップのテスト" />
+                                    <CheckBox fx:id="progressBarTestCheckBox" layoutX="14.0" layoutY="126.0" mnemonicParsing="false" text="プログレスバーのテスト" />
                                  </children>
                               </AnchorPane>
                         </content>

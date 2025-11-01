@@ -20,9 +20,9 @@ public class MainApp extends Application {
             Controller controller = loader.getController();
             controller.setStage(primaryStage);
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("com/example/gtupdated/style.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             primaryStage.setTitle("GT-Updated");
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("com/example/gtupdated/icon.png")));
+            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
             primaryStage.setScene(scene);
             primaryStage.show();
 
