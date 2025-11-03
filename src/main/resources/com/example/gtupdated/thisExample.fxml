@@ -119,7 +119,7 @@
                                     <Button fx:id="selectDebugZipButton" layoutX="167.0" layoutY="17.0" mnemonicParsing="false" onAction="#onSelectDebugZipClick" styleClass="icon-button" />
                                     <Button fx:id="localTestButton" layoutX="14.0" layoutY="59.0" mnemonicParsing="false" onAction="#onLocalTestClick" text="ローカルテスト実行" />
                                     <CheckBox fx:id="popupTestCheckBox" layoutX="14.0" layoutY="100.0" mnemonicParsing="false" text="ポップアップのテスト" />
-                                    <CheckBox fx:id="progressBarTestCheckBox" layoutX="14.0" layoutY="126.0" mnemonicParsing="false" text="プログレスバーのテスト" />
+                                    <CheckBox fx:id="progressBarTestCheckBox" layoutX="14.0" layoutY="126.0" mnemonicParsing="false" onAction="#onTestProgressBarClick" text="プログレスバーのテスト" />
                                  </children>
                               </AnchorPane>
                         </content>
@@ -128,7 +128,7 @@
                   </AnchorPane>
                 <AnchorPane fx:id="rightPaneContainer" minHeight="0.0" minWidth="0.0" prefHeight="361.0" prefWidth="238.0" styleClass="content-pane">
                      <children>
-                        <Label layoutX="42.0" layoutY="4.0" text="modpack version" />
+                        <Label fx:id="versionLabel" layoutX="42.0" layoutY="4.0" text="modpack version" />
                         <Button fx:id="updateButton" layoutX="27.0" layoutY="34.0" mnemonicParsing="false" onAction="#onUpdateButtonClick" text="アップデートを確認" />
                         <TextArea editable="false" layoutX="6.0" layoutY="69.0" maxWidth="1.7976931348623157E308" prefHeight="282.0" prefWidth="177.0" text="chenge log" />
                      </children>

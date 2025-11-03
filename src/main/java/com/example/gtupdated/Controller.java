@@ -41,8 +41,8 @@ import java.util.zip.ZipInputStream;
 public class Controller {
 
     private Stage primaryStage;
-    private static final String APP_VERSION = "1.0.3";
-    private static final String VERSION_URL = "http://YOUR_SERVER/version.json";
+    private static final String APP_VERSION = "1.1.2";
+    private static final String VERSION_URL = "https://gomadare-modpack-updater.s3.ap-northeast-1.amazonaws.com/version.json";
 
     @FXML private Button updateButton;
     @FXML private ProgressBar mainProgressBar;
@@ -64,7 +64,10 @@ public class Controller {
     @FXML private Button selectDebugFileButton;
     @FXML private CheckBox popupTestCheckBox;
     @FXML private CheckBox progressBarTestCheckBox;
+    @FXML private Label versionLabel;
 
+    private String currentModpackVersion = "0.0.0"; // アプリ起動時のデフォルト
+    private String latestVersionFound = ""; // S3から取得した最新バージョンを一時保存
     public void setStage(Stage stage) {this.primaryStage = stage;}
     private final Properties properties = new Properties();
     private final File configFile = new File("config.properties");
@@ -82,9 +85,21 @@ public class Controller {
     private void saveProperties(String gameDirectory) {
         Path configFile = getConfigFilePath();
         try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(configFile.toFile()), StandardCharsets.UTF_8)) {
-            properties.setProperty("game_directory", gameDirectory);
+
+            // ★ 保存するプロパティをセット
+            if (gameDirectory != null && !gameDirectory.isEmpty()) {
+                properties.setProperty("game_directory", gameDirectory);
+            }
+            // ★ 現在のModpackバージョンを保存
+            properties.setProperty("current_modpack_version", this.currentModpackVersion);
+
+            // アコーディオン内のデバッグパスも保存（既存のロジック）
+            if (debugPathInput != null) {
+                properties.setProperty("debug_local_zip_path", debugPathInput.getText());
+            }
+
             properties.store(out, "Modpack Updater Settings");
-            log("設定を " + configFile.toString() + " に保存しました。\n");
+            log("設定を " + configFile.toString() + " に保存しました。");
         } catch (IOException e) {
             log("設定の保存中にエラーが発生しました: " + e.getMessage() + "\n");
         }
@@ -93,11 +108,13 @@ public class Controller {
      * config.propertiesファイルから設定を読み込み、UIに反映します。
      */
     private void loadProperties() {
-        // getConfigFilePath() は Controller.java に移植されている必要があります
         Path configFile = getConfigFilePath();
 
         if (!Files.exists(configFile)) {
             log("設定ファイルが見つかりません。初回起動です。");
+            Platform.runLater(() -> {
+                versionLabel.setText("現在のVer: (不明)");
+            });
             return;
         }
 
@@ -108,6 +125,7 @@ public class Controller {
             String gameDirectory = properties.getProperty("game_directory");
             // デバッグ用Zipのパスを取得（デフォルト値は "upgrade.zip"）
             String debugZipPath = properties.getProperty("debug_local_zip_path", "upgrade.zip");
+            this.currentModpackVersion = properties.getProperty("current_modpack_version", "0.0.0"); // デフォルトは"0.0.0"
 
             // UIの更新は、必ずJavaFXアプリケーションスレッドで行います
             Platform.runLater(() -> {
@@ -120,7 +138,7 @@ public class Controller {
 
                     log("設定を " + configFile.toString() + " から読み込みました。");
                 }
-
+                versionLabel.setText("現在のVer: " + this.currentModpackVersion);
                 // デバッグ用UI（アコーディオン内のTextField）を更新
                 // FXMLに fx:id="debugPathInput" が定義されていれば、nullではなく正しく設定されます
                 if (debugPathInput != null) {
@@ -133,28 +151,33 @@ public class Controller {
         }
     }
     private void checkForUpdates() {
-        log("アップデートサーバーにバージョン情報を問い合わせています...\n");
-
+        log("サーバーにバージョン情報を問い合わせています...");
         try (HttpClient client = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest.newBuilder().uri(URI.create(VERSION_URL)).build();
-
             client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
                         String jsonBody = response.body();
                         Gson gson = new Gson();
                         JsonObject versionInfo = gson.fromJson(jsonBody, JsonObject.class);
-
                         String latestVersion = versionInfo.get("latest_version").getAsString();
-                        if (latestVersion.compareTo(APP_VERSION) > 0) {
+                        this.latestVersionFound = latestVersion;
+                        if (latestVersion.compareTo(this.currentModpackVersion) > 0) {
                             String downloadUrl = versionInfo.get("download_url").getAsString();
                             String changelog = versionInfo.get("changelog").getAsString();
-                            Platform.runLater(() -> showUpdatePopup(latestVersion, changelog, downloadUrl));
+                            Platform.runLater(() -> {
+                                if (changelogArea != null) {
+                                    changelogArea.setText(changelog);
+                                }
+                                showUpdatePopup(latestVersion, changelog, downloadUrl);
+                            });
                         } else {
-                            Platform.runLater(() -> log("お使いのバージョンは最新です。\n"));
+                            Platform.runLater(() -> {
+                                log("お使いのバージョンは最新です。");
+                            });
                         }
                     })
                     .exceptionally(e -> {
-                        Platform.runLater(() -> log("エラー: アップデート情報の取得に失敗 - " + e.getMessage() + "\n"));
+                        Platform.runLater(() -> log("エラー: アップデート情報の取得に失敗 - " + e.getMessage()));
                         return null;
                     });
         }
@@ -176,7 +199,7 @@ public class Controller {
     @FXML
     protected void onUpdateButtonClick() {
         // ロジックはここに書く
-        System.out.println("アップデートボタンがクリックされました！");
+        log("アップデートボタンがクリックされました！");
         log("アップデートの確認を開始します...");
 
         checkForUpdates();
@@ -413,6 +436,16 @@ public class Controller {
 
             // ★★★ 後処理（一時ファイルの削除） ★★★
             cleanup();
+            // 1. 現在のModpackバージョンを、S3から取得した最新バージョンに更新
+            this.currentModpackVersion = this.latestVersionFound;
+            // 2. 更新したバージョンを config.properties に保存
+            //    (gameDirectoryは既存の値をそのまま保存)
+            saveProperties(properties.getProperty("game_directory"));
+
+            // 3. UIのバージョンラベルも更新
+            Platform.runLater(() -> {
+                versionLabel.setText("現在のVer: " + this.currentModpackVersion);
+            });
             log("アップデートが正常に完了しました！\n");
 
             // 完了ポップアップを表示
@@ -576,41 +609,4 @@ public class Controller {
             log("エラー: ローカルテスト中に失敗しました - " + e.getMessage());
         }
     }
-    // プログレスバーのテスト
-    @FXML
-    void onProgressBarTestClick() {
-        Task<Void> progressTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                // 0から100までの進捗をシミュレート
-                for (int i = 0; i <= 100; i++) {
-                    // updateProgress(現在の値, 最大値)
-                    // これで進捗がUIスレッドに通知される
-                    updateProgress(i, 100);
-
-                    // 20ミリ秒待機（処理が速すぎると見えないため）
-                    Thread.sleep(20);
-                }
-                return null;
-            }
-        };
-
-        // Taskが完了したら（成功したら）実行する処理
-        progressTask.setOnSucceeded(event -> {
-            log("プログレスバーのテスト完了。");
-        });
-
-        // Taskが失敗したら実行する処理
-        progressTask.setOnFailed(event -> {
-            log("エラー発生。");
-        });
-
-        // Taskの進捗(progressProperty)を、ProgressBarの進捗(progressProperty)に結びつける
-        mainProgressBar.progressProperty().bind(progressTask.progressProperty());
-
-        // 新しいスレッドを作成し、そのスレッドでTaskを実行する
-        // (これを行わないとUIがフリーズします)
-        new Thread(progressTask).start();
-    }
-
 }
