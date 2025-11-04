@@ -74,3 +74,26 @@
 .icon-button:pressed {
     -fx-background-color: #DCDCDC; /* 少し濃いグレー */
 }
+/* TitledPane（アコーディオンのパネル）全体のスタイル */
+.titled-pane {
+    /* TitledPane自体の背景色を透明にします */
+    -fx-background-color: transparent;
+}
+
+/* TitledPaneの「タイトル」部分（矢印や "--- 開発者モード ---" があるバー）のスタイル */
+.titled-pane > .title {
+    /* タイトル部分の背景色も透明にします */
+    -fx-background-color: transparent;
+    /* タイトル部分の境界線（枠）を消します */
+    -fx-border-width: 0;
+}
+
+/* TitledPaneの「コンテンツ」部分（展開されて表示されるエリア）のスタイル */
+.titled-pane > .content {
+    /* コンテンツ部分の背景色も透明にします */
+    -fx-background-color: transparent;
+    /* コンテンツ部分の境界線（枠）を消します */
+    -fx-border-width: 0;
+    /* 内側の余白（padding）も消して、よりスッキリさせます */
+    -fx-padding: 0;
+}

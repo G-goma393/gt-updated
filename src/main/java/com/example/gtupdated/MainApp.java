@@ -15,7 +15,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("thisExample.fxml")); // FXMLファイル名に合わせてください
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("FXmain.fxml")); // FXMLファイル名に合わせてください
             Parent root = loader.load();
             Controller controller = loader.getController();
             controller.setStage(primaryStage);
@@ -24,6 +24,7 @@ public class MainApp extends Application {
             primaryStage.setTitle("GT-Updated");
             primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
             primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
             primaryStage.show();
 
         } catch (IOException e) {

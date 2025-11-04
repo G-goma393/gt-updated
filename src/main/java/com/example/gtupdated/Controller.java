@@ -189,11 +189,20 @@ public class Controller {
         // アプリ起動時の初期設定をここに書く
         log("アプリケーションを起動しました。");
         mainProgressBar.setProgress(0.0);
-
-        // directoryTextField の初期テキストを "aaa" から変更する場合
-        //directoryTextField.setText("/home/goma/...");
-
         loadProperties();
+        // アコーディオン（TitledPane）の「展開状態」を監視するリスナーを追加
+        debugPane.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
+            // 展開状態が変わった（開いた、または閉じた）場合
+
+            // JavaFXのUI変更は、次のフレームで実行するのが最も安全
+            Platform.runLater(() -> {
+                if (primaryStage != null) {
+                    // ウィンドウ（Stage）に、中身（Scene）の現在のサイズに
+                    // 強制的にフィットするように命令する
+                    primaryStage.sizeToScene();
+                }
+            });
+        });
 
     }
     @FXML

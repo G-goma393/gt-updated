@@ -32,6 +32,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
@@ -52,7 +53,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="432.0" prefWidth="640.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gtupdated.Controller">
+<VBox minHeight="432.0" prefWidth="640.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gtupdated.Controller">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
@@ -110,24 +111,36 @@
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="84.0" minHeight="10.0" prefHeight="17.0" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="272.0" minHeight="10.0" prefHeight="272.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="84.0" minHeight="10.0" prefHeight="39.0" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="272.0" minHeight="10.0" prefHeight="256.0" vgrow="SOMETIMES" />
                 <RowConstraints maxHeight="115.0" minHeight="10.0" prefHeight="23.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label fx:id="versionLabel" text="modpack version" GridPane.columnIndex="1" />
+                  <Label fx:id="versionLabel" text="modpack version" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
                   <HBox prefHeight="60.0" prefWidth="320.0" GridPane.rowIndex="1">
                      <children>
-                        <TextField fx:id="directoryTextField" />
-                        <Button fx:id="selectDirectoryButton" mnemonicParsing="false" onAction="#onSelectDirectoryClick" styleClass="icon-button" />
-                        <Button fx:id="applyDirectoryButton" mnemonicParsing="false" onAction="#onApplyDirectoryClick" text="適用" />
+                        <TextField fx:id="directoryTextField" alignment="CENTER" prefHeight="25.0" prefWidth="269.0">
+                           <HBox.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </HBox.margin></TextField>
+                        <Button fx:id="selectDirectoryButton" alignment="CENTER" mnemonicParsing="false" onAction="#onSelectDirectoryClick" prefHeight="15.0" prefWidth="22.0" styleClass="icon-button" />
+                        <Button fx:id="applyDirectoryButton" alignment="CENTER" mnemonicParsing="false" onAction="#onApplyDirectoryClick" text="適用">
+                           <HBox.margin>
+                              <Insets top="10.0" />
+                           </HBox.margin></Button>
                      </children>
                   </HBox>
-                  <Button fx:id="updateButton" mnemonicParsing="false" onAction="#onUpdateButtonClick" text="アップデートを確認" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Label text="ゲームディレクトリを選択" />
+                  <Button fx:id="updateButton" mnemonicParsing="false" onAction="#onUpdateButtonClick" prefHeight="25.0" prefWidth="126.0" text="アップデートを確認" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                  <Label text="ゲームディレクトリを選択" GridPane.valignment="BOTTOM">
+                     <GridPane.margin>
+                        <Insets left="10.0" />
+                     </GridPane.margin></Label>
                   <VBox prefHeight="272.0" prefWidth="447.0" GridPane.rowIndex="2">
                      <children>
-                        <Label fx:id="pathLabel" text="--- （未設定） ---" />
+                        <Label fx:id="pathLabel" text="--- （未設定） ---">
+                           <VBox.margin>
+                              <Insets left="10.0" />
+                           </VBox.margin></Label>
                      </children>
                   </VBox>
                   <Accordion maxWidth="1.7976931348623157E308" GridPane.rowIndex="3">
@@ -150,7 +163,10 @@
                   </Accordion>
                   <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <children>
-                        <TextArea editable="false" maxWidth="1.7976931348623157E308" prefHeight="270.0" prefWidth="192.0" text="chenge log" />
+                        <TextArea editable="false" maxWidth="1.7976931348623157E308" prefHeight="270.0" prefWidth="192.0" text="chenge log">
+                           <VBox.margin>
+                              <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+                           </VBox.margin></TextArea>
                      </children>
                   </VBox>
                </children>
