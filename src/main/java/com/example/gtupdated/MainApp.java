@@ -15,7 +15,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("FXmain.fxml")); // FXMLファイル名に合わせてください
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("dumy.fxml")); // FXMLファイル名に合わせてください
             Parent root = loader.load();
             Controller controller = loader.getController();
             controller.setStage(primaryStage);
