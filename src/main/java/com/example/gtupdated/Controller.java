@@ -41,7 +41,7 @@ import java.util.zip.ZipInputStream;
 public class Controller {
 
     private Stage primaryStage;
-    private static final String APP_VERSION = "1.1.2";
+    private static final String APP_VERSION = "1.1.3";//アコーディオンの開閉をトリガーにウィンドウサイズの自動拡張とその他レイアウト調整
     private static final String VERSION_URL = "https://gomadare-modpack-updater.s3.ap-northeast-1.amazonaws.com/version.json";
 
     @FXML private Button updateButton;
