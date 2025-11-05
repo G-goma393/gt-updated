@@ -20,6 +20,11 @@
     },
     {
       "action": "copy",
+      "source": "ドクター、終わってない仕事がたくさんありますから、まだ休んじゃだめですよ。.txt",
+      "destination": "ドクター、終わってない仕事がたくさんありますから、まだ休んじゃだめですよ。.txt"
+    },
+    {
+      "action": "copy",
       "source": "kubejs/server_scripts/お前を消す方法.js",
       "destination": "kubejs/server_scripts/お前を消す方法.js"
     }
