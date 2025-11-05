@@ -134,7 +134,7 @@ public class Controller {
                     // 1. 入力欄（TextField）にパスを設定
                     directoryTextField.setText(gameDirectory);
                     // 2. 表示用ラベルにもパスを設定
-                    pathLabel.setText("ゲームディレクトリ: " + gameDirectory);
+                    pathLabel.setText(gameDirectory);
 
                     log("設定を " + configFile.toString() + " から読み込みました。");
                 }
