@@ -43,25 +43,40 @@ jobs:
       - name: Package with jpackage
         shell: bash
         run: |
+          echo "--- Step 4: Starting Package with jpackage ---"
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
-          MODULE_PATH="target/modules"
           
-          # OSごとにjpackageのコマンドを変更
+          # モジュールパスの設定 (変更なし)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --win-menu --win-shortcut \
+            MODULE_PATH="%USERPROFILE%/.m2/repository"
+          else
+            MODULE_PATH="~/.m2/repository"
+          fi
+
+          # OSごとのコマンド設定
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            # Windows: .icoを使用
+            jpackage --type exe --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --win-menu --win-shortcut \
+              --icon src/main/resources/icon.ico \
               --module-path "${MODULE_PATH}" \
               --add-modules javafx.controls,javafx.fxml,com.google.gson,java.net.http,java.scripting
-            ARTIFACT_PATH="Modpack Updater-1.0.exe"
+            ARTIFACT_PATH="GT-Updated-1.0.exe"
+
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --icon src/main/resources/icon.icns \
-              --module-path "${MODULE_PATH}" \
-             --add-modules javafx.controls,javafx.fxml,com.google.gson,java.net.http,java.scripting
-            ARTIFACT_PATH="Modpack Updater-1.0.dmg"
-          else # ubuntu-latest
-            jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --linux-shortcut \
+            # macOS: .icnsを使用
+            jpackage --type dmg --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher \
+              --icon src/main/resources/icon.icns \
               --module-path "${MODULE_PATH}" \
               --add-modules javafx.controls,javafx.fxml,com.google.gson,java.net.http,java.scripting
-            ARTIFACT_PATH="modpack-updater_1.0_amd64.deb"
+            ARTIFACT_PATH="GT-Updated-1.0.dmg"
+
+          else # ubuntu-latest
+            # Linux: .pngを使用
+            jpackage --type deb --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --linux-shortcut \
+              --icon src/main/resources/icon.png \
+              --module-path "${MODULE_PATH}" \
+              --add-modules javafx.controls,javafx.fxml,com.google.gson,java.net.http,java.scripting
+            ARTIFACT_PATH="gt-updated_1.0_amd64.deb"
           fi
           
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}" >> $GITHUB_ENV
