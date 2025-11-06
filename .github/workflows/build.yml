@@ -46,23 +46,35 @@ jobs:
           echo "--- Step 4: Starting Package with jpackage ---"
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
           MODULE_PATH="$(pwd)/target/modules"
-          echo "Using MODULE_PATH: ${MODULE_PATH}"
-
-          # ★ デバッグ: 倉庫の中身を強制的に確認する
-          echo "--- Debug: Listing files in MODULE_PATH ---"
-          ls -F "${MODULE_PATH}" || echo "Error: MODULE_PATH does not exist!"
-          echo "-------------------------------------------"
           
-          # モジュールパスの設定 (変更なし)
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            MODULE_PATH="%USERPROFILE%/.m2/repository"
-          else
-            MODULE_PATH="~/.m2/repository"
+          echo "Cleaning up duplicate wrapper jars in ${MODULE_PATH}..."
+          # ★重複削除ロジック: プラットフォーム固有のjarがある場合、対応する汎用jarを削除する
+          # (Windowsは .jar で終わらない場合もあるため、少し単純化しています)
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+             for file in ${MODULE_PATH}/*-mac-aarch64.jar; do
+                 generic_file="${file/-mac-aarch64/}"
+                 if [ -f "$generic_file" ]; then
+                     echo "Removing generic wrapper: $(basename "$generic_file")"
+                     rm "$generic_file"
+                 fi
+             done
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+             for file in ${MODULE_PATH}/*-linux-x64.jar; do
+                 generic_file="${file/-linux-x64/}"
+                 if [ -f "$generic_file" ]; then
+                     echo "Removing generic wrapper: $(basename "$generic_file")"
+                     rm "$generic_file"
+                 fi
+             done
+          # Windowsは通常この問題が起きにくいですが、必要なら同様に追加できます
           fi
 
-          # OSごとのコマンド設定
+          echo "--- Debug: Final Listing files in MODULE_PATH ---"
+          ls -F "${MODULE_PATH}"
+          echo "-------------------------------------------"
+
+          # OSごとにjpackageのコマンドを変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            # Windows: .icoを使用
             jpackage --type exe --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --win-menu --win-shortcut \
               --icon src/main/resources/icon.ico \
               --module-path "${MODULE_PATH}" \
@@ -70,7 +82,6 @@ jobs:
             ARTIFACT_PATH="GT-Updated-1.0.exe"
 
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            # macOS: .icnsを使用
             jpackage --type dmg --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher \
               --icon src/main/resources/icon.icns \
               --module-path "${MODULE_PATH}" \
@@ -78,7 +89,6 @@ jobs:
             ARTIFACT_PATH="GT-Updated-1.0.dmg"
 
           else # ubuntu-latest
-            # Linux: .pngを使用
             jpackage --type deb --input target --name "GT-Updated" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --linux-shortcut \
               --icon src/main/resources/icon.png \
               --module-path "${MODULE_PATH}" \
