@@ -351,7 +351,9 @@ public class Controller {
                     }
 
                     long totalBytes = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
-                    File downloadedFile = new File("upgrade.zip");
+                    //File downloadedFile = new File("upgrade.zip");
+                    Path safeDownloadPath = getTempUpgradePath().getParent().resolve("upgrade.zip");
+                    File downloadedFile = safeDownloadPath.toFile();
                     long bytesRead = 0;
                     byte[] buffer = new byte[8192];
                     int read;
