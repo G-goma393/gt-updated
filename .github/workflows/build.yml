@@ -44,23 +44,21 @@ jobs:
         shell: bash
         run: |
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
-          
-          # ★★★ 修正箇所: module-pathを新しい部品棚に変更 ★★★
           MODULE_PATH="target/modules"
-
+          
           # OSごとにjpackageのコマンドを変更
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --win-menu --win-shortcut \
+            jpackage --type exe --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --win-menu --win-shortcut \
               --module-path "${MODULE_PATH}" \
               --add-modules javafx.controls,com.google.gson,java.net.http
             ARTIFACT_PATH="Modpack Updater-1.0.exe"
           elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --icon src/main/resources/icon.icns \
+            jpackage --type dmg --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --icon src/main/resources/icon.icns \
               --module-path "${MODULE_PATH}" \
               --add-modules javafx.controls,com.google.gson,java.net.http
             ARTIFACT_PATH="Modpack Updater-1.0.dmg"
           else # ubuntu-latest
-            jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.HelloApplication --linux-shortcut \
+            jpackage --type deb --input target --name "Modpack Updater" --main-jar $JAR_NAME --main-class com.example.gtupdated.Launcher --linux-shortcut \
               --module-path "${MODULE_PATH}" \
               --add-modules javafx.controls,com.google.gson,java.net.http
             ARTIFACT_PATH="modpack-updater_1.0_amd64.deb"
