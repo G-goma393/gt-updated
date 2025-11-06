@@ -45,6 +45,13 @@ jobs:
         run: |
           echo "--- Step 4: Starting Package with jpackage ---"
           JAR_NAME="gt-updated-1.0-SNAPSHOT.jar"
+          MODULE_PATH="$(pwd)/target/modules"
+          echo "Using MODULE_PATH: ${MODULE_PATH}"
+
+          # ★ デバッグ: 倉庫の中身を強制的に確認する
+          echo "--- Debug: Listing files in MODULE_PATH ---"
+          ls -F "${MODULE_PATH}" || echo "Error: MODULE_PATH does not exist!"
+          echo "-------------------------------------------"
           
           # モジュールパスの設定 (変更なし)
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
