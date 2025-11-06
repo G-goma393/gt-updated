@@ -31,4 +31,9 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        System.exit(0);
+    }
 }

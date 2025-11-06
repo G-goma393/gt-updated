@@ -280,10 +280,10 @@ public class Controller {
 
         // Taskの進捗(progressProperty)を、ProgressBarの進捗(progressProperty)に結びつける
         mainProgressBar.progressProperty().bind(progressTask.progressProperty());
-
-        // 新しいスレッドを作成し、そのスレッドでTaskを実行する
-        // (これを行わないとUIがフリーズします)
-        new Thread(progressTask).start();
+        //new Thread(progressTask).start();
+        Thread bgThread = new Thread(progressTask);
+        bgThread.setDaemon(true);
+        bgThread.start();
     }
     @FXML
     protected void onApplyDirectoryClick() {
