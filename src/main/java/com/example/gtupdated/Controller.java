@@ -74,13 +74,12 @@ public class Controller {
 
 
     private Path getConfigFilePath() {
-        // ユーザーのホームディレクトリを取得 (例: C:\Users\goma)
         String userHome = System.getProperty("user.home");
-        // アプリケーション用の設定フォルダのパスを構築 (例: C:\Users\goma\AppData\Roaming\ModpackUpdater)
-        // OSごとに適切な場所を自動で選択してくれます
         Path configDir = Paths.get(userHome, "AppData", "Roaming", "ModpackUpdater");
-        // 設定ファイルのフルパスを返す
         return configDir.resolve("config.properties");
+    }
+    private Path getTempUpgradePath() {
+        return getConfigFilePath().getParent().resolve("temp_upgrade");
     }
     private void saveProperties(String gameDirectory) {
         Path configFile = getConfigFilePath();
@@ -266,8 +265,6 @@ public class Controller {
                 return null;
             }
         };
-
-
         // Taskが完了したら（成功したら）実行する処理
         progressTask.setOnSucceeded(event -> {
             log("プログレスバーのテスト完了。");
@@ -381,9 +378,9 @@ public class Controller {
 
             log("アップデートファイルを解凍しています...\n");
             try {
-                unzip(downloadedFile.getPath(), "temp_upgrade");
+                unzip(downloadedFile.getPath(), getTempUpgradePath().toString());
                 log("解凍が完了しました。\n");
-                processManifest("temp_upgrade/manifest.json");
+                processManifest(getTempUpgradePath().resolve("manifest.json").toString());
             } catch (IOException e) {
                 log("エラー: ファイルの解凍に失敗しました - " + e.getMessage() + "\n");
             }
@@ -408,7 +405,7 @@ public class Controller {
         }
 
         Path gameDir = Paths.get(gameDirectoryPath);
-        Path tempDir = Paths.get("temp_upgrade");
+        Path tempDir = getTempUpgradePath();
 
         String content = Files.readString(Paths.get(manifestPath));
         Gson gson = new Gson();
@@ -489,7 +486,7 @@ public class Controller {
         log("一時ファイルをクリーンアップしています...\n");
         try {
             Files.deleteIfExists(Paths.get("upgrade.zip"));
-            Path tempUpgradeDir = Paths.get("temp_upgrade");
+            Path tempUpgradeDir = getTempUpgradePath();
             if (Files.exists(tempUpgradeDir)) {
                 // try-with-resourcesでStreamを管理
                 try (Stream<Path> walk = Files.walk(tempUpgradeDir)) {
@@ -611,9 +608,9 @@ public class Controller {
 
         try {
             // 移植したロジックを実行
-            unzip(localZipPath, "temp_upgrade");
+            unzip(localZipPath, getTempUpgradePath().toString());
             log("解凍が完了しました。");
-            processManifest("temp_upgrade/manifest.json");
+            processManifest(getTempUpgradePath().resolve("manifest.json").toString());
         } catch (IOException e) {
             log("エラー: ローカルテスト中に失敗しました - " + e.getMessage());
         }

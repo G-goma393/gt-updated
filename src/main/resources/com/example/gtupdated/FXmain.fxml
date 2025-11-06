@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Copyright (c) 2015, 2019, Gluon and/or its affiliates.
+  All rights reserved. Use is subject to license terms.
+
+  This file is available and licensed under the following license:
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the distribution.
+  - Neither the name of Oracle Corporation nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox maxHeight="1.7976931348623157E308" minHeight="432.0" minWidth="640.0" prefWidth="640.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gtupdated.Controller">
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="File">
+          <items>
+            <MenuItem mnemonicParsing="false" text="New" />
+            <MenuItem mnemonicParsing="false" text="Open…" />
+            <Menu mnemonicParsing="false" text="Open Recent" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Close" />
+            <MenuItem mnemonicParsing="false" text="Save" />
+            <MenuItem mnemonicParsing="false" text="Save As…" />
+            <MenuItem mnemonicParsing="false" text="Revert" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Preferences…" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Quit" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+            <MenuItem mnemonicParsing="false" text="Undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Cut" />
+            <MenuItem mnemonicParsing="false" text="Copy" />
+            <MenuItem mnemonicParsing="false" text="Paste" />
+            <MenuItem mnemonicParsing="false" text="Delete" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Select All" />
+            <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About GT-Updated" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+      <BorderPane prefWidth="624.0" VBox.vgrow="ALWAYS">
+         <bottom>
+            <VBox prefWidth="640.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ProgressBar fx:id="mainProgressBar" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="640.0" progress="0.0" />
+                  <TextField fx:id="statusLabel" editable="false" text="logggg" />
+               </children>
+            </VBox>
+         </bottom>
+         <center>
+            <GridPane prefWidth="640.0" BorderPane.alignment="CENTER">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="448.0" minWidth="10.0" prefWidth="411.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="192.0" minWidth="10.0" prefWidth="229.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints maxHeight="43.0" minHeight="32.0" prefHeight="32.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="84.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="300.0" minHeight="280.0" prefHeight="268.0" vgrow="SOMETIMES" />
+                <RowConstraints vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label fx:id="versionLabel" text="modpack version" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <HBox prefHeight="57.0" prefWidth="448.0" GridPane.rowIndex="1">
+                     <children>
+                        <TextField fx:id="directoryTextField" prefHeight="25.0" prefWidth="269.0">
+                           <HBox.margin>
+                              <Insets left="10.0" top="10.0" />
+                           </HBox.margin></TextField>
+                        <Button fx:id="selectDirectoryButton" alignment="CENTER" mnemonicParsing="false" onAction="#onSelectDirectoryClick" prefHeight="15.0" prefWidth="22.0" styleClass="icon-button" />
+                        <Button fx:id="applyDirectoryButton" alignment="CENTER" mnemonicParsing="false" onAction="#onApplyDirectoryClick" text="適用">
+                           <HBox.margin>
+                              <Insets top="10.0" />
+                           </HBox.margin></Button>
+                     </children>
+                  </HBox>
+                  <Button fx:id="updateButton" mnemonicParsing="false" onAction="#onUpdateButtonClick" prefHeight="25.0" prefWidth="126.0" text="アップデートを確認" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                  <Label text="ゲームディレクトリを選択" GridPane.valignment="BOTTOM">
+                     <GridPane.margin>
+                        <Insets left="10.0" />
+                     </GridPane.margin></Label>
+                  <VBox prefHeight="285.0" prefWidth="448.0" GridPane.rowIndex="2">
+                     <children>
+                        <Label fx:id="pathLabel" text="--- （未設定） ---">
+                           <VBox.margin>
+                              <Insets left="10.0" />
+                           </VBox.margin></Label>
+                     </children>
+                  </VBox>
+                  <Accordion maxWidth="1.7976931348623157E308" GridPane.rowIndex="3">
+                     <panes>
+                      <TitledPane fx:id="debugPane" animated="false" maxWidth="1.7976931348623157E308" prefWidth="468.0" text="--- 開発者モード ---">
+                        <content>
+                          <AnchorPane maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="200.0">
+                                 <children>
+                                    <Label layoutX="14.0" layoutY="4.0" text="テスト用Zipパス" />
+                                    <TextField fx:id="debugPathInput" layoutX="14.0" layoutY="24.0" />
+                                    <Button fx:id="selectDebugZipButton" layoutX="163.0" layoutY="16.0" mnemonicParsing="false" onAction="#onSelectDebugZipClick" styleClass="icon-button" />
+                                    <Button fx:id="localTestButton" layoutX="14.0" layoutY="59.0" mnemonicParsing="false" onAction="#onLocalTestClick" text="ローカルテスト実行" />
+                                    <CheckBox fx:id="popupTestCheckBox" layoutX="14.0" layoutY="100.0" mnemonicParsing="false" text="ポップアップのテスト" />
+                                    <CheckBox fx:id="progressBarTestCheckBox" layoutX="14.0" layoutY="126.0" mnemonicParsing="false" onAction="#onTestProgressBarClick" text="プログレスバーのテスト" />
+                                 </children>
+                              </AnchorPane>
+                        </content>
+                      </TitledPane>
+                     </panes>
+                  </Accordion>
+                  <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.rowSpan="2">
+                     <children>
+                        <TextArea editable="false" maxWidth="1.7976931348623157E308" minHeight="260.0" prefHeight="453.0" prefWidth="172.0" text="chenge log">
+                           <VBox.margin>
+                              <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+                           </VBox.margin></TextArea>
+                     </children>
+                  </VBox>
+               </children>
+            </GridPane>
+         </center>
+      </BorderPane>
+  </children>
+</VBox>
