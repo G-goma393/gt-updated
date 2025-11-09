@@ -45,12 +45,15 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox maxHeight="1.7976931348623157E308" minHeight="432.0" minWidth="640.0" prefWidth="640.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.gtupdated.Controller">
@@ -98,7 +101,21 @@
             <bottom>
                 <VBox prefWidth="640.0" BorderPane.alignment="CENTER">
                     <children>
-                        <ProgressBar fx:id="mainProgressBar" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="640.0" progress="0.0" />
+                  <StackPane alignment="CENTER_LEFT" prefHeight="6.0" prefWidth="640.0" VBox.vgrow="ALWAYS">
+                     <children>
+                              <ProgressBar fx:id="mainProgressBar" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="640.0" progress="0.0" />
+                        <ImageView fx:id="gifBView" fitHeight="100.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                           <image>
+                              <Image url="@gifImageViewB_64px.gif" />
+                           </image>
+                        </ImageView>
+                        <ImageView fx:id="gifCView" fitHeight="95.0" fitWidth="44.0" focusTraversable="true" pickOnBounds="true" preserveRatio="true" visible="false">
+                           <image>
+                              <Image url="@gifImageViewC.gif" />
+                           </image>
+                        </ImageView>
+                     </children>
+                  </StackPane>
                         <TextField fx:id="statusLabel" editable="false" text="logggg" />
                     </children>
                 </VBox>
@@ -135,12 +152,17 @@
                             <GridPane.margin>
                                 <Insets left="10.0" />
                             </GridPane.margin></Label>
-                        <VBox prefHeight="285.0" prefWidth="448.0" GridPane.rowIndex="2">
+                        <VBox alignment="CENTER" prefHeight="285.0" prefWidth="448.0" GridPane.rowIndex="2">
                             <children>
                                 <Label fx:id="pathLabel" text="--- （未設定） ---">
                                     <VBox.margin>
                                         <Insets left="10.0" />
                                     </VBox.margin></Label>
+                        <ImageView fx:id="gifImageViewA" fitHeight="253.0" fitWidth="443.0" pickOnBounds="true" preserveRatio="true" VBox.vgrow="ALWAYS">
+                           <image>
+                              <Image url="@animationA.gif" />
+                           </image>
+                        </ImageView>
                             </children>
                         </VBox>
                         <Accordion maxWidth="1.7976931348623157E308" GridPane.rowIndex="3">

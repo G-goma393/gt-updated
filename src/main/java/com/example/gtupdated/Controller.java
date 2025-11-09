@@ -21,6 +21,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+//import javax.swing.text.html.ImageView;
 import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -37,6 +38,7 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javafx.scene.image.ImageView;
 
 public class Controller {
 
@@ -65,6 +67,8 @@ public class Controller {
     @FXML private CheckBox popupTestCheckBox;
     @FXML private CheckBox progressBarTestCheckBox;
     @FXML private Label versionLabel;
+    @FXML private ImageView gifBView;
+    @FXML private ImageView gifCView;
 
     private String currentModpackVersion = "0.0.0"; // アプリ起動時のデフォルト
     private String latestVersionFound = ""; // S3から取得した最新バージョンを一時保存
@@ -189,6 +193,43 @@ public class Controller {
         log("アプリケーションを起動しました。");
         mainProgressBar.setProgress(0.0);
         loadProperties();
+        // mainProgressBarの「進捗(progress)」プロパティを監視するリスナーを追加
+        mainProgressBar.progressProperty().addListener((obs, oldProgress, newProgress) -> {
+            // newProgress は 0.0 から 1.0 の値
+            double progress = newProgress.doubleValue();
+
+            if (progress < 1.0 && progress > 0.0) {
+                // --- 処理中 ---
+                gifBView.setVisible(true);
+                gifCView.setVisible(false);
+
+                // バーの幅を取得
+                double barWidth = mainProgressBar.getWidth();
+                // GIFの幅を取得 (仮に50pxとします。実際のGIFの幅に合わせて調整してください)
+                double gifWidth = 50;
+
+                // GIFの新しいX座標を計算 (バーの幅 * 進捗率 - GIFの半分の幅)
+                double newX = (barWidth * progress) - (gifWidth / 2);
+
+                // GIF(B)を計算した位置に水平移動させる
+                gifBView.setTranslateX(newX);
+
+            } else if (progress >= 1.0) {
+                // --- 完了時 ---
+                gifBView.setVisible(false);
+                gifCView.setVisible(true);
+
+                // GIF(C)を終端（右端）に配置
+                double barWidth = mainProgressBar.getWidth();
+                double gifCWidth = 50; // GIF(C)の幅
+                gifCView.setTranslateX(barWidth - gifCWidth);
+
+            } else {
+                // --- 待機中 (progress <= 0.0) ---
+                gifBView.setVisible(false);
+                gifCView.setVisible(false);
+            }
+        });
         // アコーディオン（TitledPane）の「展開状態」を監視するリスナーを追加
         debugPane.expandedProperty().addListener((obs, wasExpanded, isNowExpanded) -> {
             // 展開状態が変わった（開いた、または閉じた）場合
@@ -272,6 +313,8 @@ public class Controller {
 
         // Taskが失敗したら実行する処理
         progressTask.setOnFailed(event -> {
+            gifBView.setVisible(false);
+            gifCView.setVisible(false);
             log("エラー発生。");
         });
 
@@ -389,6 +432,8 @@ public class Controller {
         });
 
         downloadTask.setOnFailed(event -> {
+            gifBView.setVisible(false);
+            gifCView.setVisible(false);
             log("エラー: ダウンロードに失敗しました - " + downloadTask.getException().getMessage() + "\n");
             mainProgressBar.setVisible(false);
             mainProgressBar.progressProperty().unbind();
