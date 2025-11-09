@@ -39,6 +39,9 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javafx.scene.image.ImageView;
+import java.util.zip.ZipFile;
+import java.nio.charset.Charset;
+import java.util.Enumeration;
 
 public class Controller {
 
@@ -528,11 +531,17 @@ public class Controller {
         });
     }
 
-    // ★★★ 一時ファイルを削除するためのヘルパーメソッド ★★★
     private void cleanup() {
-        log("一時ファイルをクリーンアップしています...\n");
+        log("一時ファイルをクリーンアップしています...");
         try {
-            Files.deleteIfExists(Paths.get("upgrade.zip"));
+            // ★ 修正点: Program Filesではなく、AppData内のzipを削除
+            // getTempUpgradePath() は .../AppData/Roaming/ModpackUpdater/temp_upgrade を返す
+            // .getParent() で .../ModpackUpdater フォルダを取得
+            // .resolve("upgrade.zip") で正しいzipファイルのパスを取得
+            Path safeDownloadPath = getTempUpgradePath().getParent().resolve("upgrade.zip");
+            Files.deleteIfExists(safeDownloadPath);
+
+            // temp_upgrade フォルダの削除 (ここは変更なし)
             Path tempUpgradeDir = getTempUpgradePath();
             if (Files.exists(tempUpgradeDir)) {
                 // try-with-resourcesでStreamを管理
@@ -542,7 +551,7 @@ public class Controller {
                             .forEach(File::delete);
                 }
             }
-            log("クリーンアップが完了しました。\n");
+            log("クリーンアップが完了しました。");
         } catch (IOException e) {
             log("エラー: 一時ファイルのクリーンアップに失敗 - " + e.getMessage() + "\n");
         }
@@ -550,35 +559,43 @@ public class Controller {
     private void unzip(String zipFilePath, String destDirectory) throws IOException {
         File destDir = new File(destDirectory);
         if (!destDir.exists()) {
-            if (!destDir.mkdir()) {
-                throw new IOException("出力先ディレクトリの作成に失敗しました: " + destDirectory);
-            }
+            destDir.mkdirs();
         }
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFilePath))) {
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
+
+        // ★ 修正点: ZipInputStreamの代わりにZipFileを使用し、文字コードを指定
+        // Charset.forName("MS932") は、Windowsの標準的な日本語エンコーディング(Shift_JIS)です
+        try (ZipFile zipFile = new ZipFile(zipFilePath, Charset.forName("MS932"))) {
+
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
                 File newFile = new File(destDir, zipEntry.getName());
+
+                // Zip Slip 脆弱性対策 (変更なし)
                 if (!newFile.getCanonicalPath().startsWith(destDir.getCanonicalPath() + File.separator)) {
                     throw new IOException("Zip Slip 攻撃の可能性があります: " + zipEntry.getName());
                 }
+
                 if (zipEntry.isDirectory()) {
-                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                        throw new IOException("ディレクトリの作成に失敗しました: " + newFile);
-                    }
+                    newFile.mkdirs();
                 } else {
                     File parent = newFile.getParentFile();
-                    if (!parent.isDirectory() && !parent.mkdirs()) {
-                        throw new IOException("ディレクトリの作成に失敗しました: " + parent);
+                    if (!parent.isDirectory()) {
+                        parent.mkdirs();
                     }
-                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+
+                    // ★ 修正点: zipFile.getInputStream() を使ってストリームを取得
+                    try (InputStream in = zipFile.getInputStream(zipEntry);
+                         FileOutputStream out = new FileOutputStream(newFile)) {
+
                         byte[] buffer = new byte[8192];
                         int len;
-                        while ((len = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, len);
+                        while ((len = in.read(buffer)) > 0) {
+                            out.write(buffer, 0, len);
                         }
                     }
                 }
-                zipEntry = zis.getNextEntry();
             }
         }
     }
